@@ -5,7 +5,9 @@ const http = axios.create({ baseURL: '/api' })
 
 export const api = {
   async listFeatures(query = ''): Promise<FeatureSummary[]> {
-    const { data } = await http.get('/features', { params: { q: query } })
+    const cleanQuery = query.trim()
+    const params = cleanQuery ? { q: cleanQuery } : undefined
+    const { data } = await http.get('/features', { params })
     return data
   },
   async getFeature(id: string): Promise<FeatureDocument> {
