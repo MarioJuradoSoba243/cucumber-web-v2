@@ -26,9 +26,27 @@ watch(
 )
 
 const preview = computed(() => render(store.selectedFeature))
+const newFeatureName = ref('')
 
 function open(id: string) {
   store.openFeature(id)
+}
+
+function addScenario(type: 'SCENARIO' | 'OUTLINE') {
+  if (!store.selectedFeature) return
+  store.selectedFeature.scenarios.push({
+    id: crypto.randomUUID(),
+    type,
+    name: type === 'OUTLINE' ? 'Nuevo Scenario Outline' : 'Nuevo Scenario',
+    tags: [],
+    steps: [],
+    exampleTables: type === 'OUTLINE' ? [{ id: crypto.randomUUID(), name: 'Default', tags: [], columns: ['param'], rows: [] }] : []
+  })
+}
+
+async function createFeature() {
+  await store.createFeature(newFeatureName.value)
+  newFeatureName.value = ''
 }
 </script>
 
@@ -38,8 +56,13 @@ function open(id: string) {
     <main class="main">
       <div class="topbar">
         <input v-model="store.query" placeholder="Buscar por nombre, tag, ruta..." @input="store.loadFeatures" />
+        <input v-model="newFeatureName" placeholder="Nueva feature..." />
+        <button @click="createFeature">Crear Feature</button>
+        <button @click="addScenario('SCENARIO')" :disabled="!store.selectedFeature">+ Scenario</button>
+        <button @click="addScenario('OUTLINE')" :disabled="!store.selectedFeature">+ Outline</button>
         <button @click="store.saveFeature" :disabled="!store.selectedFeature">Guardar</button>
       </div>
+      <p v-if="store.message" class="ok">{{ store.message }}</p>
 
       <MetricCards :metrics="store.metrics" />
 

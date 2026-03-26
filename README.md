@@ -58,11 +58,15 @@ Frontend en `http://localhost:5173` y backend en `http://localhost:8080`.
 
 - `GET /api/features`
 - `GET /api/features/{id}`
+- `GET /api/features/detail?id=<path>` (recomendado para rutas con `/`)
 - `POST /api/features`
 - `PUT /api/features/{id}`
+- `PUT /api/features/detail?id=<path>`
 - `DELETE /api/features/{id}`
+- `DELETE /api/features/detail?id=<path>`
 - `POST /api/features/{id}/save`
 - `GET /api/features/{id}/export`
+- `GET /api/features/export?id=<path>`
 - `POST /api/import/rescan`
 - `GET /api/settings/features-path`
 

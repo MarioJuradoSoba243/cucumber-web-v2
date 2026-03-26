@@ -25,4 +25,5 @@ button { border: 0; background: #2563eb; color: white; border-radius: 8px; paddi
 .danger { background: #dc2626; }
 .preview { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 10px; overflow: auto; min-height: 300px; }
 .validation { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; padding: .6rem; border-radius: 8px; }
+.ok { color: #166534; background: #dcfce7; border: 1px solid #86efac; padding: .5rem .8rem; border-radius: 8px; }
 @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } .sidebar { max-height: 30vh; } .metrics { grid-template-columns: repeat(2,1fr);} }

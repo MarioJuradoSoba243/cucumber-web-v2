@@ -11,7 +11,10 @@ function addColumn() {
 
 function removeColumn(column: string) {
   if (props.table.columns.length <= 1) return
-  props.table.columns = props.table.columns.filter((c) => c !== column)
+  const index = props.table.columns.indexOf(column)
+  if (index >= 0) {
+    props.table.columns.splice(index, 1)
+  }
   props.table.rows.forEach((row) => delete row.values[column])
 }
 
@@ -22,7 +25,10 @@ function addRow() {
 }
 
 function removeRow(id: string) {
-  props.table.rows = props.table.rows.filter((r) => r.id !== id)
+  const index = props.table.rows.findIndex((r) => r.id === id)
+  if (index >= 0) {
+    props.table.rows.splice(index, 1)
+  }
 }
 </script>
 

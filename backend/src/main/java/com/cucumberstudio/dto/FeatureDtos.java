@@ -1,7 +1,6 @@
 package com.cucumberstudio.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -31,7 +30,7 @@ public final class FeatureDtos {
             String description,
             List<String> tags,
             BackgroundDto background,
-            @NotEmpty List<ScenarioDto> scenarios,
+            List<ScenarioDto> scenarios,
             ValidationReportDto validation
     ) {
     }

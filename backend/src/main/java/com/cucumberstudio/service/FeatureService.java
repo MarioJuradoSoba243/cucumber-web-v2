@@ -8,6 +8,8 @@ import com.cucumberstudio.exporter.GherkinFeatureExporter;
 import com.cucumberstudio.mapper.FeatureMapper;
 import com.cucumberstudio.parser.GherkinFeatureParser;
 import com.cucumberstudio.validation.FeatureValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -19,6 +21,7 @@ import java.util.UUID;
 
 @Service
 public class FeatureService {
+    private static final Logger log = LoggerFactory.getLogger(FeatureService.class);
     private final CucumberProperties properties;
     private final GherkinFeatureParser parser;
     private final GherkinFeatureExporter exporter;
@@ -36,6 +39,7 @@ public class FeatureService {
 
     public List<FeatureDtos.FeatureSummaryDto> listFeatures(String query) throws IOException {
         String safeQuery = query == null ? "" : query.toLowerCase();
+        log.debug("Scanning features in {} with query {}", featuresPath(), safeQuery);
         try (var stream = Files.walk(featuresPath())) {
             return stream
                     .filter(path -> path.toString().endsWith(".feature"))
@@ -49,6 +53,7 @@ public class FeatureService {
 
     public FeatureDtos.FeatureDocumentDto getFeature(String id) throws IOException {
         Path path = resolveFromId(id);
+        log.debug("Loading feature from {}", path);
         if (!Files.exists(path)) {
             throw new NotFoundException("Feature not found: " + id);
         }
@@ -58,6 +63,9 @@ public class FeatureService {
 
     public FeatureDtos.FeatureDocumentDto createFeature(FeatureDtos.FeatureDocumentDto dto) throws IOException {
         FeatureDocument document = mapper.toDomain(dto);
+        if (document.getScenarios().isEmpty()) {
+            log.debug("Creating feature without scenarios yet: {}", document.getName());
+        }
         if (document.getId() == null || document.getId().isBlank()) {
             document.setId(UUID.randomUUID() + ".feature");
         }
@@ -72,6 +80,7 @@ public class FeatureService {
 
     public FeatureDtos.FeatureDocumentDto updateFeature(String id, FeatureDtos.FeatureDocumentDto dto) throws IOException {
         Path path = resolveFromId(id);
+        log.debug("Updating feature at {}", path);
         FeatureDocument document = mapper.toDomain(dto);
         document.setId(path.toString());
         document.setFilePath(path.toString());
@@ -81,11 +90,13 @@ public class FeatureService {
 
     public void deleteFeature(String id) throws IOException {
         Path path = resolveFromId(id);
+        log.debug("Deleting feature file {}", path);
         Files.deleteIfExists(path);
     }
 
     public String exportFeature(String id) throws IOException {
         Path path = resolveFromId(id);
+        log.debug("Exporting feature file {}", path);
         FeatureDocument document = parser.parse(Files.readString(path), path);
         return exporter.export(document);
     }
@@ -121,9 +132,11 @@ public class FeatureService {
     private void saveDomain(FeatureDocument document, Path path) throws IOException {
         var validation = validator.validate(document);
         if (!validation.errors().isEmpty()) {
+            log.warn("Validation errors for {}: {}", path, validation.errors());
             throw new IllegalArgumentException(String.join("; ", validation.errors()));
         }
         Files.createDirectories(path.getParent());
+        log.info("Persisting feature to {}", path);
         Files.writeString(path, exporter.export(document), StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
