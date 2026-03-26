@@ -1,11 +1,30 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { Scenario } from '../types/feature'
 import ExamplesTableEditor from './ExamplesTableEditor.vue'
 
 const props = defineProps<{ scenario: Scenario }>()
 
+const placeholderColumns = computed(() => {
+  const placeholders = new Set<string>()
+
+  props.scenario.steps.forEach((step) => {
+    for (const match of step.text.matchAll(/<([^>]+)>/g)) {
+      if (match[1]) {
+        placeholders.add(match[1])
+      }
+    }
+  })
+
+  return Array.from(placeholders)
+})
+
 function addStep() {
   props.scenario.steps.push({ keyword: 'AND', text: '' })
+}
+
+function removeStep(index: number) {
+  props.scenario.steps.splice(index, 1)
 }
 
 function addExamples() {
@@ -14,26 +33,42 @@ function addExamples() {
 </script>
 
 <template>
-  <article class="scenario">
-    <header>
-      <input v-model="scenario.name" class="scenario-title" />
-      <span class="badge">{{ scenario.type }}</span>
+  <article class="scenario card">
+    <header class="scenario-header">
+      <div>
+        <input v-model="scenario.name" class="scenario-title" :placeholder="scenario.type === 'OUTLINE' ? 'Nuevo Scenario Outline' : 'Nuevo Scenario'" />
+        <p class="muted">{{ scenario.steps.length }} pasos</p>
+      </div>
+      <span class="badge" :class="scenario.type === 'OUTLINE' ? 'warning' : 'info'">{{ scenario.type }}</span>
     </header>
 
     <div class="steps">
       <div v-for="(step, index) in scenario.steps" :key="index" class="step-row">
         <select v-model="step.keyword">
-          <option>GIVEN</option><option>WHEN</option><option>THEN</option><option>AND</option><option>BUT</option>
+          <option>GIVEN</option>
+          <option>WHEN</option>
+          <option>THEN</option>
+          <option>AND</option>
+          <option>BUT</option>
         </select>
-        <input v-model="step.text" placeholder="Step..." />
+        <input v-model="step.text" placeholder="Describe el paso... (usa <param> para outlines)" />
+        <button class="ghost icon-btn" title="Eliminar paso" @click="removeStep(index)">🗑</button>
       </div>
-      <button @click="addStep">+ Step</button>
+      <button class="secondary" @click="addStep">+ Añadir paso</button>
     </div>
 
     <div v-if="scenario.type === 'OUTLINE'" class="examples-section">
-      <h4>Examples</h4>
-      <ExamplesTableEditor v-for="table in scenario.exampleTables" :key="table.id" :table="table" />
-      <button @click="addExamples">+ Bloque Examples</button>
+      <div class="examples-header">
+        <h4>Examples</h4>
+        <span class="badge neutral">Placeholders: {{ placeholderColumns.length }}</span>
+      </div>
+      <ExamplesTableEditor
+        v-for="table in scenario.exampleTables"
+        :key="table.id"
+        :table="table"
+        :placeholder-columns="placeholderColumns"
+      />
+      <button class="secondary" @click="addExamples">+ Bloque Examples</button>
     </div>
   </article>
 </template>

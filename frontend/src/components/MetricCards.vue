@@ -4,9 +4,21 @@ defineProps<{ metrics: { features: number; scenarios: number; outlines: number; 
 
 <template>
   <div class="metrics">
-    <div class="card"><h4>Features</h4><strong>{{ metrics.features }}</strong></div>
-    <div class="card"><h4>Scenarios</h4><strong>{{ metrics.scenarios }}</strong></div>
-    <div class="card"><h4>Outlines</h4><strong>{{ metrics.outlines }}</strong></div>
-    <div class="card"><h4>Examples Rows</h4><strong>{{ metrics.examples }}</strong></div>
+    <div class="card metric-card">
+      <p>Total Features</p>
+      <strong>{{ metrics.features }}</strong>
+    </div>
+    <div class="card metric-card">
+      <p>Scenarios</p>
+      <strong>{{ metrics.scenarios }}</strong>
+    </div>
+    <div class="card metric-card">
+      <p>Outlines</p>
+      <strong>{{ metrics.outlines }}</strong>
+    </div>
+    <div class="card metric-card">
+      <p>Rows en Examples</p>
+      <strong>{{ metrics.examples }}</strong>
+    </div>
   </div>
 </template>
