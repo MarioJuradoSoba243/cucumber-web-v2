@@ -3,7 +3,9 @@ import { computed, ref } from 'vue'
 import type { Scenario } from '../types/feature'
 import ExamplesTableEditor from './ExamplesTableEditor.vue'
 
-const props = defineProps<{ scenario: Scenario }>()
+const props = withDefaults(defineProps<{ scenario: Scenario; mode?: 'full' | 'examples' }>(), {
+  mode: 'full'
+})
 const collapsed = ref(false)
 
 const placeholderColumns = computed(() => {
@@ -35,13 +37,15 @@ function addExamples() {
 
 <template>
   <article class="scenario card">
-    <header class="scenario-header">
+    <header class="scenario-header" :class="{ 'scenario-header-compact': mode === 'examples' }">
       <div>
         <input v-model="scenario.name" class="scenario-title" :placeholder="scenario.type === 'OUTLINE' ? 'Nuevo Scenario Outline' : 'Nuevo Scenario'" />
-        <p class="muted">{{ scenario.steps.length }} pasos</p>
+        <p v-if="mode === 'full'" class="muted">{{ scenario.steps.length }} pasos</p>
+        <p v-else class="muted">Examples: {{ scenario.exampleTables.length }}</p>
       </div>
       <div class="scenario-header-actions">
         <button
+          v-if="mode === 'full'"
           class="ghost collapse-btn"
           type="button"
           :aria-expanded="!collapsed"
@@ -53,8 +57,8 @@ function addExamples() {
       </div>
     </header>
 
-    <div v-show="!collapsed" class="scenario-content">
-      <div class="steps">
+    <div v-show="mode === 'examples' || !collapsed" class="scenario-content">
+      <div v-if="mode === 'full'" class="steps">
       <div v-for="(step, index) in scenario.steps" :key="index" class="step-row">
         <select v-model="step.keyword">
           <option>GIVEN</option>
@@ -69,7 +73,7 @@ function addExamples() {
       <button class="secondary" @click="addStep">+ Añadir paso</button>
       </div>
 
-      <div v-if="scenario.type === 'OUTLINE'" class="examples-section">
+      <div v-if="scenario.type === 'OUTLINE'" class="examples-section" :class="{ 'examples-section-compact': mode === 'examples' }">
         <div class="examples-header">
           <h4>Examples</h4>
           <span class="badge neutral">Placeholders: {{ placeholderColumns.length }}</span>
