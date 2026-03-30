@@ -164,7 +164,8 @@ async function exportCurrentFeature() {
         </section>
 
         <section v-if="activeTab === 'examples'" class="tab-content fade-in">
-          <ScenarioEditor v-for="scenario in outlineScenarios" :key="scenario.id" :scenario="scenario" />
+          <p class="muted">Edita solo las tablas de datos de cada Scenario Outline.</p>
+          <ScenarioEditor v-for="scenario in outlineScenarios" :key="scenario.id" :scenario="scenario" mode="examples" />
           <div v-if="!outlineScenarios.length" class="empty">No hay Scenario Outline. Crea uno para editar Examples.</div>
         </section>
 
