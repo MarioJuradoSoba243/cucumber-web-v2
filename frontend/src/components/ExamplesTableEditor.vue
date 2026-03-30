@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { ExampleTable } from '../types/feature'
 
 const props = defineProps<{ table: ExampleTable; placeholderColumns?: string[] }>()
@@ -21,6 +21,9 @@ const emptyCells = computed(() => {
       .map((column) => `${row.id.slice(0, 4)}:${column}`)
   )
 })
+
+const expandedEditor = ref<{ rowId: string; column: string } | null>(null)
+const expandedValue = ref('')
 
 function addColumn() {
   const column = `column_${props.table.columns.length + 1}`
@@ -65,6 +68,25 @@ function removeRow(id: string) {
     props.table.rows.splice(index, 1)
   }
 }
+
+function openExpandedEditor(rowId: string, column: string) {
+  const row = props.table.rows.find((entry) => entry.id === rowId)
+  if (!row) return
+  expandedEditor.value = { rowId, column }
+  expandedValue.value = row.values[column] ?? ''
+}
+
+function closeExpandedEditor() {
+  expandedEditor.value = null
+}
+
+function saveExpandedValue() {
+  if (!expandedEditor.value) return
+  const row = props.table.rows.find((entry) => entry.id === expandedEditor.value?.rowId)
+  if (!row) return
+  row.values[expandedEditor.value.column] = expandedValue.value
+  closeExpandedEditor()
+}
 </script>
 
 <template>
@@ -106,7 +128,10 @@ function removeRow(id: string) {
           </tr>
           <tr v-for="row in table.rows" :key="row.id">
             <td v-for="column in table.columns" :key="`${row.id}-${column}`">
-              <input v-model="row.values[column]" :placeholder="`Valor para ${column}`" />
+              <div class="cell-input-wrap">
+                <input v-model="row.values[column]" :placeholder="`Valor para ${column}`" />
+                <button class="ghost icon-btn" type="button" title="Expandir editor" @click="openExpandedEditor(row.id, column)">⤢</button>
+              </div>
             </td>
             <td class="action-col">
               <button class="ghost danger" @click="removeRow(row.id)">🗑 Eliminar</button>
@@ -114,6 +139,21 @@ function removeRow(id: string) {
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div v-if="expandedEditor" class="modal-backdrop" @click.self="closeExpandedEditor">
+      <div class="modal card">
+        <header class="modal-header">
+          <h4>Editar valor completo</h4>
+          <button class="ghost icon-btn" type="button" @click="closeExpandedEditor">✕</button>
+        </header>
+        <p class="muted">Columna: <strong>{{ expandedEditor.column }}</strong></p>
+        <textarea v-model="expandedValue" rows="8" placeholder="Escribe el texto completo..." />
+        <div class="modal-actions">
+          <button class="ghost" type="button" @click="closeExpandedEditor">Cancelar</button>
+          <button class="primary" type="button" @click="saveExpandedValue">Guardar valor</button>
+        </div>
+      </div>
     </div>
   </section>
 </template>
