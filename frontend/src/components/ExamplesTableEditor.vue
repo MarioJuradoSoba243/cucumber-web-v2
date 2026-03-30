@@ -164,11 +164,32 @@ function saveExpandedValue() {
           </tr>
           <tr v-for="row in table.rows" :key="row.id">
             <td class="action-col compact-actions">
-              <button v-if="editingRowId !== row.id" class="ghost" @click="editRow(row.id)">✏ Editar</button>
-              <button v-else class="ghost" @click="saveEditRow">✓ Guardar</button>
-              <button v-if="editingRowId === row.id" class="ghost" @click="cancelEditRow">Cancelar</button>
-              <button class="ghost" @click="duplicateRow(row.id)">⎘ Duplicar</button>
-              <button class="ghost danger" @click="removeRow(row.id)">🗑 Eliminar</button>
+              <button
+                v-if="editingRowId !== row.id"
+                class="ghost action-icon"
+                title="Editar fila"
+                @click="editRow(row.id)"
+              >
+                ✏
+              </button>
+              <button
+                v-else
+                class="ghost action-icon"
+                title="Guardar cambios"
+                @click="saveEditRow"
+              >
+                ✓
+              </button>
+              <button
+                v-if="editingRowId === row.id"
+                class="ghost action-icon"
+                title="Cancelar edición"
+                @click="cancelEditRow"
+              >
+                ✕
+              </button>
+              <button class="ghost action-icon" title="Duplicar fila" @click="duplicateRow(row.id)">⎘</button>
+              <button class="ghost danger action-icon" title="Eliminar fila" @click="removeRow(row.id)">🗑</button>
             </td>
             <td v-for="column in table.columns" :key="`${row.id}-${column}`" class="compact-cell">
               <div v-if="editingRowId === row.id" class="cell-input-wrap">
@@ -230,13 +251,20 @@ function saveExpandedValue() {
 }
 
 .compact-actions {
-  min-width: 160px;
+  min-width: 96px;
+  white-space: nowrap;
 }
 
-.compact-actions button {
+.action-icon {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  padding: 0;
+  margin-right: 0.15rem;
   font-size: 0.72rem;
-  padding: 0.2rem 0.3rem;
-  margin-right: 0.2rem;
-  margin-bottom: 0.2rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
