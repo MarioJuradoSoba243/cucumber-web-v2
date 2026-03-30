@@ -51,9 +51,14 @@ public class GherkinFeatureExporter {
                         builder.append(" ").append(table.getName());
                     }
                     builder.append("\n");
-                    appendTableRow(builder, table.getColumns(), 6);
+                    appendTableRow(builder, table.getColumns(), 6, false);
                     for (ExampleRow row : table.getRows()) {
-                        appendTableRow(builder, table.getColumns().stream().map(column -> row.getValues().getOrDefault(column, "")).toList(), 6);
+                        appendTableRow(
+                                builder,
+                                table.getColumns().stream().map(column -> row.getValues().getOrDefault(column, "")).toList(),
+                                6,
+                                true
+                        );
                     }
                     builder.append("\n");
                 }
@@ -73,12 +78,23 @@ public class GherkinFeatureExporter {
         builder.append("\n");
     }
 
-    private void appendTableRow(StringBuilder builder, java.util.List<String> values, int indent) {
+    private void appendTableRow(StringBuilder builder, java.util.List<String> values, int indent, boolean quoteValues) {
         builder.append(" ".repeat(indent)).append("| ");
         for (String value : values) {
-            builder.append(value == null ? "" : value).append(" | ");
+            String finalValue = value == null ? "" : value;
+            builder.append(quoteValues ? quoteExampleValue(finalValue) : finalValue).append(" | ");
         }
         builder.setLength(builder.length() - 1);
         builder.append("\n");
+    }
+
+    private String quoteExampleValue(String value) {
+        if (value.isBlank()) {
+            return "\"\"";
+        }
+        if (value.length() >= 2 && value.startsWith("\"") && value.endsWith("\"")) {
+            return value;
+        }
+        return "\"" + value.replace("\"", "\\\"") + "\"";
     }
 }

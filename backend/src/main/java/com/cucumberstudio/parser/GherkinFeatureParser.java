@@ -149,9 +149,17 @@ public class GherkinFeatureParser {
         String[] parts = body.split("\\|");
         List<String> cells = new ArrayList<>();
         for (String part : parts) {
-            cells.add(part.trim());
+            cells.add(normalizeCellValue(part.trim()));
         }
         return cells;
+    }
+
+    private String normalizeCellValue(String value) {
+        if (value.length() >= 2 && value.startsWith("\"") && value.endsWith("\"")) {
+            String unquoted = value.substring(1, value.length() - 1);
+            return unquoted.replace("\\\"", "\"");
+        }
+        return value;
     }
 
     private boolean isStep(String line) {

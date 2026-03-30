@@ -26,7 +26,7 @@ class GherkinFeatureParserTest {
 
                     Examples: Casos extremos
                       | items | total |
-                      | 100   | 500   |
+                      | "100" | "500" |
                 """;
 
         var doc = parser.parse(text, Path.of("checkout.feature"));
@@ -37,6 +37,7 @@ class GherkinFeatureParserTest {
         assertEquals(2, outline.getExampleTables().size());
         assertEquals("Casos básicos", outline.getExampleTables().get(0).getName());
         assertEquals("500", outline.getExampleTables().get(1).getRows().getFirst().getValues().get("total"));
+        assertEquals("100", outline.getExampleTables().get(1).getRows().getFirst().getValues().get("items"));
         assertTrue(parser.collectPlaceholders(outline).contains("items"));
     }
 }
