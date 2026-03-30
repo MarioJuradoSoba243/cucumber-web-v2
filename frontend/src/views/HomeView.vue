@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useFeatureStore } from '../stores/featureStore'
 import FeatureSidebar from '../components/FeatureSidebar.vue'
 import MetricCards from '../components/MetricCards.vue'
@@ -18,6 +18,15 @@ const baseline = ref('')
 
 onMounted(() => {
   store.loadFeatures()
+  document.body.classList.toggle('dark-theme', darkMode.value)
+})
+
+watch(darkMode, (enabled) => {
+  document.body.classList.toggle('dark-theme', enabled)
+})
+
+onBeforeUnmount(() => {
+  document.body.classList.remove('dark-theme')
 })
 
 watch(
