@@ -24,6 +24,13 @@ const emptyCells = computed(() => {
 
 const expandedEditor = ref<{ rowId: string; column: string } | null>(null)
 const expandedValue = ref('')
+const minimizedColumns = ref<string[]>([])
+
+const canMinimizeEmptyColumns = computed(() =>
+  props.table.columns.some((column) =>
+    props.table.rows.every((row) => !String(row.values[column] ?? '').trim())
+  )
+)
 
 function addColumn() {
   const column = `column_${props.table.columns.length + 1}`
@@ -40,6 +47,7 @@ function removeColumn(column: string) {
     props.table.columns.splice(index, 1)
   }
   props.table.rows.forEach((row) => delete row.values[column])
+  minimizedColumns.value = minimizedColumns.value.filter((entry) => entry !== column)
 }
 
 function renameColumn(previous: string, next: string) {
@@ -52,6 +60,12 @@ function renameColumn(previous: string, next: string) {
     row.values[next] = row.values[previous] ?? ''
     delete row.values[previous]
   })
+
+  if (minimizedColumns.value.includes(previous)) {
+    minimizedColumns.value = minimizedColumns.value
+      .filter((entry) => entry !== previous)
+      .concat(next)
+  }
 }
 
 function addRow() {
@@ -85,6 +99,30 @@ function duplicateRow(id: string) {
   })
 }
 
+function isColumnMinimized(column: string) {
+  return minimizedColumns.value.includes(column)
+}
+
+function toggleColumnMinimized(column: string) {
+  if (isColumnMinimized(column)) {
+    minimizedColumns.value = minimizedColumns.value.filter((entry) => entry !== column)
+    return
+  }
+  minimizedColumns.value = [...minimizedColumns.value, column]
+}
+
+function minimizeEmptyColumns() {
+  const emptyColumns = props.table.columns.filter((column) =>
+    props.table.rows.every((row) => !String(row.values[column] ?? '').trim())
+  )
+  if (!emptyColumns.length) return
+  minimizedColumns.value = [...new Set([...minimizedColumns.value, ...emptyColumns])]
+}
+
+function expandAllColumns() {
+  minimizedColumns.value = []
+}
+
 function openExpandedEditor(rowId: string, column: string) {
   const row = props.table.rows.find((entry) => entry.id === rowId)
   if (!row) return
@@ -112,6 +150,15 @@ function saveExpandedValue() {
       <div class="toolbar-actions">
         <button class="secondary" @click="addColumn">+ Columna</button>
         <button class="secondary" @click="addRow">+ Fila</button>
+        <button
+          class="secondary"
+          :disabled="!canMinimizeEmptyColumns"
+          title="Minimiza columnas donde todas las celdas están vacías"
+          @click="minimizeEmptyColumns"
+        >
+          ↔ Minimizar vacías
+        </button>
+        <button class="secondary" :disabled="!minimizedColumns.length" @click="expandAllColumns">↔ Expandir todo</button>
       </div>
     </div>
 
@@ -131,8 +178,15 @@ function saveExpandedValue() {
       <table>
         <thead>
           <tr>
-            <th v-for="column in table.columns" :key="column">
+            <th v-for="column in table.columns" :key="column" :class="{ 'minimized-col': isColumnMinimized(column) }">
               <input :value="column" @change="renameColumn(column, ($event.target as HTMLInputElement).value)" />
+              <button
+                class="ghost icon-btn"
+                :title="isColumnMinimized(column) ? 'Expandir columna' : 'Minimizar columna'"
+                @click="toggleColumnMinimized(column)"
+              >
+                {{ isColumnMinimized(column) ? '↔' : '↤' }}
+              </button>
               <button class="ghost icon-btn" title="Eliminar columna" @click="removeColumn(column)">✕</button>
             </th>
             <th class="action-col">Acciones</th>
@@ -143,9 +197,13 @@ function saveExpandedValue() {
             <td :colspan="table.columns.length + 1" class="empty-cell">No hay filas todavía. Añade una para comenzar.</td>
           </tr>
           <tr v-for="row in table.rows" :key="row.id">
-            <td v-for="column in table.columns" :key="`${row.id}-${column}`">
+            <td v-for="column in table.columns" :key="`${row.id}-${column}`" :class="{ 'minimized-col': isColumnMinimized(column) }">
               <div class="cell-input-wrap">
-                <input v-model="row.values[column]" :placeholder="`Valor para ${column}`" />
+                <input
+                  v-model="row.values[column]"
+                  :placeholder="`Valor para ${column}`"
+                  :class="{ 'minimized-input': isColumnMinimized(column) }"
+                />
                 <button class="ghost icon-btn" type="button" title="Expandir editor" @click="openExpandedEditor(row.id, column)">⤢</button>
               </div>
             </td>
@@ -174,3 +232,14 @@ function saveExpandedValue() {
     </div>
   </section>
 </template>
+
+<style scoped>
+.minimized-col {
+  width: 120px;
+  max-width: 120px;
+}
+
+.minimized-input {
+  max-width: 90px;
+}
+</style>
