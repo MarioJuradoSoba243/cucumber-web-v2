@@ -40,4 +40,24 @@ class GherkinFeatureParserTest {
         assertEquals("100", outline.getExampleTables().get(1).getRows().getFirst().getValues().get("items"));
         assertTrue(parser.collectPlaceholders(outline).contains("items"));
     }
+
+    @Test
+    void shouldParseEscapedPipeCharacterInExampleValues() {
+        String text = """
+                Feature: Checkout
+                  Scenario Outline: Leer valor con pipe
+                    Given el valor "<valor>"
+
+                    Examples:
+                      | valor              |
+                      | "A\\|B\\|C"        |
+                      | dato\\|sin\\|comillas |
+                """;
+
+        var doc = parser.parse(text, Path.of("checkout.feature"));
+        var rows = doc.getScenarios().getFirst().getExampleTables().getFirst().getRows();
+
+        assertEquals("A|B|C", rows.get(0).getValues().get("valor"));
+        assertEquals("dato|sin|comillas", rows.get(1).getValues().get("valor"));
+    }
 }

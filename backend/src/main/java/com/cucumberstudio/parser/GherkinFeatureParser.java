@@ -146,11 +146,23 @@ public class GherkinFeatureParser {
 
     private List<String> parseTableCells(String line) {
         String body = line.substring(1, line.length() - 1);
-        String[] parts = body.split("\\|");
         List<String> cells = new ArrayList<>();
-        for (String part : parts) {
-            cells.add(normalizeCellValue(part.trim()));
+        StringBuilder cellBuilder = new StringBuilder();
+        for (int i = 0; i < body.length(); i++) {
+            char current = body.charAt(i);
+            if (current == '\\' && i + 1 < body.length() && body.charAt(i + 1) == '|') {
+                cellBuilder.append('|');
+                i++;
+                continue;
+            }
+            if (current == '|') {
+                cells.add(normalizeCellValue(cellBuilder.toString().trim()));
+                cellBuilder.setLength(0);
+                continue;
+            }
+            cellBuilder.append(current);
         }
+        cells.add(normalizeCellValue(cellBuilder.toString().trim()));
         return cells;
     }
 
