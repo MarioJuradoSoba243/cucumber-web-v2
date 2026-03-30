@@ -24,13 +24,7 @@ const emptyCells = computed(() => {
 
 const expandedEditor = ref<{ rowId: string; column: string } | null>(null)
 const expandedValue = ref('')
-const minimizedColumns = ref<string[]>([])
-
-const canMinimizeEmptyColumns = computed(() =>
-  props.table.columns.some((column) =>
-    props.table.rows.every((row) => !String(row.values[column] ?? '').trim())
-  )
-)
+const editingRowId = ref<string | null>(null)
 
 function addColumn() {
   const column = `column_${props.table.columns.length + 1}`
@@ -47,7 +41,6 @@ function removeColumn(column: string) {
     props.table.columns.splice(index, 1)
   }
   props.table.rows.forEach((row) => delete row.values[column])
-  minimizedColumns.value = minimizedColumns.value.filter((entry) => entry !== column)
 }
 
 function renameColumn(previous: string, next: string) {
@@ -60,12 +53,6 @@ function renameColumn(previous: string, next: string) {
     row.values[next] = row.values[previous] ?? ''
     delete row.values[previous]
   })
-
-  if (minimizedColumns.value.includes(previous)) {
-    minimizedColumns.value = minimizedColumns.value
-      .filter((entry) => entry !== previous)
-      .concat(next)
-  }
 }
 
 function addRow() {
@@ -99,28 +86,23 @@ function duplicateRow(id: string) {
   })
 }
 
-function isColumnMinimized(column: string) {
-  return minimizedColumns.value.includes(column)
+function editRow(id: string) {
+  editingRowId.value = id
 }
 
-function toggleColumnMinimized(column: string) {
-  if (isColumnMinimized(column)) {
-    minimizedColumns.value = minimizedColumns.value.filter((entry) => entry !== column)
-    return
-  }
-  minimizedColumns.value = [...minimizedColumns.value, column]
+function cancelEditRow() {
+  editingRowId.value = null
 }
 
-function minimizeEmptyColumns() {
-  const emptyColumns = props.table.columns.filter((column) =>
-    props.table.rows.every((row) => !String(row.values[column] ?? '').trim())
-  )
-  if (!emptyColumns.length) return
-  minimizedColumns.value = [...new Set([...minimizedColumns.value, ...emptyColumns])]
+function saveEditRow() {
+  editingRowId.value = null
 }
 
-function expandAllColumns() {
-  minimizedColumns.value = []
+function formatCellValue(value: string | undefined) {
+  const normalized = String(value ?? '').trim()
+  if (!normalized) return '—'
+  if (normalized.length <= 10) return normalized
+  return `${normalized.slice(0, 10)}…`
 }
 
 function openExpandedEditor(rowId: string, column: string) {
@@ -150,15 +132,6 @@ function saveExpandedValue() {
       <div class="toolbar-actions">
         <button class="secondary" @click="addColumn">+ Columna</button>
         <button class="secondary" @click="addRow">+ Fila</button>
-        <button
-          class="secondary"
-          :disabled="!canMinimizeEmptyColumns"
-          title="Minimiza columnas donde todas las celdas están vacías"
-          @click="minimizeEmptyColumns"
-        >
-          ↔ Minimizar vacías
-        </button>
-        <button class="secondary" :disabled="!minimizedColumns.length" @click="expandAllColumns">↔ Expandir todo</button>
       </div>
     </div>
 
@@ -178,18 +151,11 @@ function saveExpandedValue() {
       <table>
         <thead>
           <tr>
-            <th v-for="column in table.columns" :key="column" :class="{ 'minimized-col': isColumnMinimized(column) }">
+            <th class="action-col">Acciones</th>
+            <th v-for="column in table.columns" :key="column">
               <input :value="column" @change="renameColumn(column, ($event.target as HTMLInputElement).value)" />
-              <button
-                class="ghost icon-btn"
-                :title="isColumnMinimized(column) ? 'Expandir columna' : 'Minimizar columna'"
-                @click="toggleColumnMinimized(column)"
-              >
-                {{ isColumnMinimized(column) ? '↔' : '↤' }}
-              </button>
               <button class="ghost icon-btn" title="Eliminar columna" @click="removeColumn(column)">✕</button>
             </th>
-            <th class="action-col">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -197,19 +163,19 @@ function saveExpandedValue() {
             <td :colspan="table.columns.length + 1" class="empty-cell">No hay filas todavía. Añade una para comenzar.</td>
           </tr>
           <tr v-for="row in table.rows" :key="row.id">
-            <td v-for="column in table.columns" :key="`${row.id}-${column}`" :class="{ 'minimized-col': isColumnMinimized(column) }">
-              <div class="cell-input-wrap">
-                <input
-                  v-model="row.values[column]"
-                  :placeholder="`Valor para ${column}`"
-                  :class="{ 'minimized-input': isColumnMinimized(column) }"
-                />
-                <button class="ghost icon-btn" type="button" title="Expandir editor" @click="openExpandedEditor(row.id, column)">⤢</button>
-              </div>
-            </td>
-            <td class="action-col">
+            <td class="action-col compact-actions">
+              <button v-if="editingRowId !== row.id" class="ghost" @click="editRow(row.id)">✏ Editar</button>
+              <button v-else class="ghost" @click="saveEditRow">✓ Guardar</button>
+              <button v-if="editingRowId === row.id" class="ghost" @click="cancelEditRow">Cancelar</button>
               <button class="ghost" @click="duplicateRow(row.id)">⎘ Duplicar</button>
               <button class="ghost danger" @click="removeRow(row.id)">🗑 Eliminar</button>
+            </td>
+            <td v-for="column in table.columns" :key="`${row.id}-${column}`" class="compact-cell">
+              <div v-if="editingRowId === row.id" class="cell-input-wrap">
+                <input v-model="row.values[column]" :placeholder="`Valor para ${column}`" />
+                <button class="ghost icon-btn" type="button" title="Expandir editor" @click="openExpandedEditor(row.id, column)">⤢</button>
+              </div>
+              <span v-else class="readonly-value" :title="String(row.values[column] ?? '')">{{ formatCellValue(row.values[column]) }}</span>
             </td>
           </tr>
         </tbody>
@@ -234,12 +200,43 @@ function saveExpandedValue() {
 </template>
 
 <style scoped>
-.minimized-col {
-  width: 120px;
+.table-wrap table {
+  font-size: 0.8rem;
+}
+
+.table-wrap th,
+.table-wrap td {
+  padding: 0.25rem 0.35rem;
+  vertical-align: middle;
+}
+
+.table-wrap th input {
+  max-width: 120px;
+  font-size: 0.75rem;
+}
+
+.compact-cell {
+  min-width: 95px;
   max-width: 120px;
 }
 
-.minimized-input {
-  max-width: 90px;
+.readonly-value {
+  display: inline-block;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+.compact-actions {
+  min-width: 160px;
+}
+
+.compact-actions button {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.3rem;
+  margin-right: 0.2rem;
+  margin-bottom: 0.2rem;
 }
 </style>
