@@ -25,7 +25,9 @@ export function useGherkinPreview() {
           if (table.tags?.length) lines.push(`    ${table.tags.map((t) => `@${t}`).join(' ')}`)
           lines.push(`    Examples:${table.name ? ` ${table.name}` : ''}`)
           lines.push(`      | ${table.columns.join(' | ')} |`)
-          table.rows.forEach((r) => lines.push(`      | ${table.columns.map((c) => r.values[c] || '').join(' | ')} |`))
+          table.rows.forEach((r) =>
+            lines.push(`      | ${table.columns.map((c) => quoteExampleValue(r.values[c] || '')).join(' | ')} |`)
+          )
           lines.push('')
         })
       }
@@ -37,6 +39,12 @@ export function useGherkinPreview() {
 
   function capitalize(k: string) {
     return k.charAt(0).toUpperCase() + k.slice(1).toLowerCase()
+  }
+
+  function quoteExampleValue(value: string) {
+    if (!value.trim()) return '""'
+    if (value.startsWith('"') && value.endsWith('"')) return value
+    return `"${value.replace(/"/g, '\\"')}"`
   }
 
   return { render }
