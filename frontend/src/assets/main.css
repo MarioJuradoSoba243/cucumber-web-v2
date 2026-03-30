@@ -134,9 +134,10 @@ body.dark-theme .layout {
 }
 
 body.dark-theme .card {
-  background: #111827;
-  border-color: #334155;
-  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.45);
+  background: #111827 !important;
+  border-color: #334155 !important;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.45) !important;
+  color: #e2e8f0 !important;
 }
 
 body.dark-theme .muted,
@@ -147,8 +148,8 @@ body.dark-theme .empty-cell {
 }
 
 body.dark-theme .secondary {
-  background: #334155;
-  color: #e2e8f0;
+  background: #334155 !important;
+  color: #e2e8f0 !important;
 }
 
 body.dark-theme .secondary:hover {
@@ -156,8 +157,8 @@ body.dark-theme .secondary:hover {
 }
 
 body.dark-theme .ghost {
-  border-color: #475569;
-  color: #cbd5e1;
+  border-color: #475569 !important;
+  color: #cbd5e1 !important;
 }
 
 body.dark-theme .ghost:hover {
@@ -167,23 +168,23 @@ body.dark-theme .ghost:hover {
 body.dark-theme input,
 body.dark-theme textarea,
 body.dark-theme select {
-  background: #0f172a;
-  border-color: #334155;
-  color: #e2e8f0;
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
 }
 
 body.dark-theme .tabs {
-  background: #0f172a;
+  background: #0f172a !important;
 }
 
 body.dark-theme .tabs button {
-  color: #94a3b8;
+  color: #94a3b8 !important;
 }
 
 body.dark-theme .tabs button.active {
-  background: #1e293b;
-  color: #e2e8f0;
-  box-shadow: none;
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  box-shadow: none !important;
 }
 
 body.dark-theme .scenario,
@@ -193,17 +194,17 @@ body.dark-theme .examples-block {
 
 body.dark-theme .examples-block,
 body.dark-theme .table-wrap {
-  background: #0f172a;
+  background: #0f172a !important;
 }
 
 body.dark-theme .table-wrap {
-  border-color: #334155;
+  border-color: #334155 !important;
 }
 
 body.dark-theme .examples-block th,
 body.dark-theme .examples-block td {
-  border-bottom-color: #1e293b;
-  color: #e2e8f0;
+  border-bottom-color: #1e293b !important;
+  color: #e2e8f0 !important;
 }
 
 body.dark-theme .examples-block tbody tr:hover {
