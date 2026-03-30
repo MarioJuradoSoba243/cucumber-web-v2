@@ -173,6 +173,7 @@ function saveExpandedValue() {
         <colgroup>
           <col class="actions-col-width" />
           <col v-for="column in table.columns" :key="`col-${column}`" class="data-col-width" />
+          <col class="actions-col-width" />
         </colgroup>
         <thead>
           <tr>
@@ -191,11 +192,12 @@ function saveExpandedValue() {
                 </template>
               </div>
             </th>
+            <th class="action-col">Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="!table.rows.length">
-            <td :colspan="table.columns.length + 1" class="empty-cell">No hay filas todavía. Añade una para comenzar.</td>
+            <td :colspan="table.columns.length + 2" class="empty-cell">No hay filas todavía. Añade una para comenzar.</td>
           </tr>
           <tr v-for="row in table.rows" :key="row.id">
             <td class="action-col compact-actions">
@@ -232,6 +234,34 @@ function saveExpandedValue() {
                 <button class="ghost icon-btn" type="button" title="Expandir editor" @click="openExpandedEditor(row.id, column)">⤢</button>
               </div>
               <span v-else class="readonly-value" :title="String(row.values[column] ?? '')">{{ formatCellValue(row.values[column]) }}</span>
+            </td>
+            <td class="action-col compact-actions">
+              <button
+                v-if="editingRowId !== row.id"
+                class="ghost action-icon"
+                title="Editar fila"
+                @click="editRow(row.id)"
+              >
+                ✏
+              </button>
+              <button
+                v-else
+                class="ghost action-icon"
+                title="Guardar cambios"
+                @click="saveEditRow"
+              >
+                ✓
+              </button>
+              <button
+                v-if="editingRowId === row.id"
+                class="ghost action-icon"
+                title="Cancelar edición"
+                @click="cancelEditRow"
+              >
+                ✕
+              </button>
+              <button class="ghost action-icon" title="Duplicar fila" @click="duplicateRow(row.id)">⎘</button>
+              <button class="ghost danger action-icon" title="Eliminar fila" @click="removeRow(row.id)">🗑</button>
             </td>
           </tr>
         </tbody>
