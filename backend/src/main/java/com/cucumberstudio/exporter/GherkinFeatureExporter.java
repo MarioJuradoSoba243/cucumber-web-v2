@@ -95,6 +95,8 @@ public class GherkinFeatureExporter {
         if (value.length() >= 2 && value.startsWith("\"") && value.endsWith("\"")) {
             return value;
         }
-        return "\"" + value.replace("\"", "\\\"") + "\"";
+        return "\"" + value
+                .replace("|", "\\|")
+                .replace("\"", "\\\"") + "\"";
     }
 }

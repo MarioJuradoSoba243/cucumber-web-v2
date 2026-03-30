@@ -23,7 +23,7 @@ class GherkinFeatureExporterTest {
         row.setId("row-1");
         row.getValues().putAll(Map.of(
                 "username", "alice",
-                "password", "secret \"safe\" pass"
+                "password", "secret | \"safe\" pass"
         ));
 
         ExampleTable table = new ExampleTable();
@@ -48,6 +48,6 @@ class GherkinFeatureExporterTest {
         String exported = exporter.export(document);
 
         assertTrue(exported.contains("| username | password |"));
-        assertTrue(exported.contains("| \"alice\" | \"secret \\\"safe\\\" pass\" |"));
+        assertTrue(exported.contains("| \"alice\" | \"secret \\| \\\"safe\\\" pass\" |"));
     }
 }
