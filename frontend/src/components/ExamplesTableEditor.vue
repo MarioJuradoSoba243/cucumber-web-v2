@@ -69,6 +69,22 @@ function removeRow(id: string) {
   }
 }
 
+function duplicateRow(id: string) {
+  const index = props.table.rows.findIndex((row) => row.id === id)
+  if (index < 0) return
+
+  const sourceRow = props.table.rows[index]
+  const values: Record<string, string> = {}
+  props.table.columns.forEach((column) => {
+    values[column] = sourceRow.values[column] ?? ''
+  })
+
+  props.table.rows.splice(index + 1, 0, {
+    id: crypto.randomUUID(),
+    values
+  })
+}
+
 function openExpandedEditor(rowId: string, column: string) {
   const row = props.table.rows.find((entry) => entry.id === rowId)
   if (!row) return
@@ -134,6 +150,7 @@ function saveExpandedValue() {
               </div>
             </td>
             <td class="action-col">
+              <button class="ghost" @click="duplicateRow(row.id)">⎘ Duplicar</button>
               <button class="ghost danger" @click="removeRow(row.id)">🗑 Eliminar</button>
             </td>
           </tr>
