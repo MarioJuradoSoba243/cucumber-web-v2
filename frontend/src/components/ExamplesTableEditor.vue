@@ -25,6 +25,8 @@ const emptyCells = computed(() => {
 const expandedEditor = ref<{ rowId: string; column: string } | null>(null)
 const expandedValue = ref('')
 const editingRowId = ref<string | null>(null)
+const editingColumnId = ref<string | null>(null)
+const editingColumnValue = ref('')
 
 function addColumn() {
   const column = `column_${props.table.columns.length + 1}`
@@ -53,6 +55,25 @@ function renameColumn(previous: string, next: string) {
     row.values[next] = row.values[previous] ?? ''
     delete row.values[previous]
   })
+}
+
+function startEditColumn(column: string) {
+  editingColumnId.value = column
+  editingColumnValue.value = column
+}
+
+function saveEditColumn(previous: string) {
+  const next = editingColumnValue.value.trim()
+  if (next) {
+    renameColumn(previous, next)
+  }
+  editingColumnId.value = null
+  editingColumnValue.value = ''
+}
+
+function cancelEditColumn() {
+  editingColumnId.value = null
+  editingColumnValue.value = ''
 }
 
 function addRow() {
@@ -101,8 +122,8 @@ function saveEditRow() {
 function formatCellValue(value: string | undefined) {
   const normalized = String(value ?? '').trim()
   if (!normalized) return '—'
-  if (normalized.length <= 10) return normalized
-  return `${normalized.slice(0, 10)}…`
+  if (normalized.length <= 20) return normalized
+  return `${normalized.slice(0, 20)}…`
 }
 
 function openExpandedEditor(rowId: string, column: string) {
@@ -153,8 +174,18 @@ function saveExpandedValue() {
           <tr>
             <th class="action-col">Acciones</th>
             <th v-for="column in table.columns" :key="column">
-              <input :value="column" @change="renameColumn(column, ($event.target as HTMLInputElement).value)" />
-              <button class="ghost icon-btn" title="Eliminar columna" @click="removeColumn(column)">✕</button>
+              <div class="column-header-actions">
+                <template v-if="editingColumnId === column">
+                  <input v-model="editingColumnValue" />
+                  <button class="ghost action-icon" title="Guardar nombre de columna" @click="saveEditColumn(column)">✓</button>
+                  <button class="ghost action-icon" title="Cancelar edición de columna" @click="cancelEditColumn">✕</button>
+                </template>
+                <template v-else>
+                  <span class="readonly-value" :title="column">{{ formatCellValue(column) }}</span>
+                  <button class="ghost action-icon" title="Editar columna" @click="startEditColumn(column)">✏</button>
+                  <button class="ghost danger action-icon" title="Eliminar columna" @click="removeColumn(column)">🗑</button>
+                </template>
+              </div>
             </th>
           </tr>
         </thead>
@@ -237,13 +268,13 @@ function saveExpandedValue() {
 }
 
 .compact-cell {
-  min-width: 95px;
-  max-width: 120px;
+  min-width: 130px;
+  max-width: 160px;
 }
 
 .readonly-value {
   display: inline-block;
-  max-width: 100px;
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -266,5 +297,11 @@ function saveExpandedValue() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.column-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
 }
 </style>
