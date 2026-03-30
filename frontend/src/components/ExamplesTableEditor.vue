@@ -170,6 +170,10 @@ function saveExpandedValue() {
 
     <div class="table-wrap">
       <table>
+        <colgroup>
+          <col class="actions-col-width" />
+          <col v-for="column in table.columns" :key="`col-${column}`" class="data-col-width" />
+        </colgroup>
         <thead>
           <tr>
             <th class="action-col">Acciones</th>
@@ -254,27 +258,29 @@ function saveExpandedValue() {
 <style scoped>
 .table-wrap table {
   font-size: 0.8rem;
+  table-layout: fixed;
+  border-collapse: collapse;
 }
 
 .table-wrap th,
 .table-wrap td {
-  padding: 0.25rem 0.35rem;
+  padding: 0.15rem 0.25rem;
   vertical-align: middle;
+  text-align: left;
 }
 
 .table-wrap th input {
-  max-width: 120px;
+  max-width: 105px;
   font-size: 0.75rem;
 }
 
 .compact-cell {
-  min-width: 130px;
-  max-width: 160px;
+  width: 100%;
 }
 
 .readonly-value {
   display: inline-block;
-  max-width: 140px;
+  max-width: 108px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -282,7 +288,7 @@ function saveExpandedValue() {
 }
 
 .compact-actions {
-  min-width: 96px;
+  width: 100%;
   white-space: nowrap;
 }
 
@@ -300,8 +306,18 @@ function saveExpandedValue() {
 }
 
 .column-header-actions {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.15rem;
+  justify-content: flex-start;
+  gap: 0.1rem;
+  width: 100%;
+}
+
+.actions-col-width {
+  width: 78px;
+}
+
+.data-col-width {
+  width: 112px;
 }
 </style>
