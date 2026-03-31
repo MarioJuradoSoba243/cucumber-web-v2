@@ -23,16 +23,16 @@ const emit = defineEmits<{
 }>()
 
 const featureName = ref('')
-const folderPath = ref('')
+const selectedFolderPath = ref('')
 
 
 function createFeature() {
-  emit('create', featureName.value, folderPath.value)
+  emit('create', featureName.value, selectedFolderPath.value)
   featureName.value = ''
 }
 
 function setCreateFolderPath(path: string) {
-  folderPath.value = path
+  selectedFolderPath.value = path
 }
 
 function askCreateFolder(parentPath: string) {
@@ -95,7 +95,6 @@ function askMove(sourcePath: string) {
       </div>
 
       <div class="sidebar-footer">
-        <input v-model="folderPath" placeholder="Carpeta destino (opcional)" />
         <input v-model="featureName" placeholder="Nueva feature" @keyup.enter="createFeature" />
         <button class="primary icon-only" title="Crear feature" @click="createFeature">➕</button>
       </div>

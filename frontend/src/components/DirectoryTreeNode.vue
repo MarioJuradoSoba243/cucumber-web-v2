@@ -19,7 +19,8 @@ const emit = defineEmits<{
 
 const expanded = ref(true)
 const depth = computed(() => props.level ?? 0)
-const indent = computed(() => Math.min(depth.value * 14, 84))
+const indent = computed(() => Math.min(depth.value * 10, 64))
+const featureIndent = computed(() => Math.min((depth.value + 1) * 10, 74))
 const currentPath = computed(() => props.node.path)
 const nodeLabel = computed(() => {
   if (!currentPath.value) return 'Raíz'
@@ -45,7 +46,7 @@ const nodeLabel = computed(() => {
         v-for="feature in node.features"
         :key="feature.id"
         :class="['feature-item tree-feature', { active: selectedId === feature.id }]"
-        :style="{ marginLeft: `${Math.min((depth + 1) * 14, 98)}px` }"
+        :style="{ marginLeft: `${featureIndent}px`, width: `calc(100% - ${featureIndent}px)` }"
         @click="emit('select', feature.id)"
       >
         <div class="feature-item-title">🧪 {{ feature.name }}</div>
