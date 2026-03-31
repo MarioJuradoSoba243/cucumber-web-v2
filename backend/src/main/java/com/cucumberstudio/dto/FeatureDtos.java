@@ -3,6 +3,7 @@ package com.cucumberstudio.dto;
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,25 @@ public final class FeatureDtos {
     }
 
     public record ExampleRowDto(String id, Map<String, String> values) {
+    }
+
+    public record ExportSelectionRequest(
+            FeatureDocumentDto feature,
+            List<ScenarioExportSelectionDto> scenarios
+    ) {
+        public List<ScenarioExportSelectionDto> safeScenarios() {
+            return scenarios == null ? List.of() : scenarios;
+        }
+    }
+
+    public record ScenarioExportSelectionDto(
+            String scenarioId,
+            boolean selected,
+            Map<String, List<String>> exampleRowIdsByTableId
+    ) {
+        public Map<String, List<String>> safeExampleRowsByTable() {
+            return exampleRowIdsByTableId == null ? Collections.emptyMap() : exampleRowIdsByTableId;
+        }
     }
 
     public record ValidationReportDto(

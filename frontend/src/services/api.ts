@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { FeatureDocument, FeatureSummary } from '../types/feature'
+import type { ExportSelectionRequest, FeatureDocument, FeatureSummary } from '../types/feature'
 
 const http = axios.create({ baseURL: '/api' })
 
@@ -27,6 +27,10 @@ export const api = {
   },
   async exportFeature(id: string): Promise<string> {
     const { data } = await http.get('/features/export', { params: { id } })
+    return data
+  },
+  async exportSelection(payload: ExportSelectionRequest): Promise<string> {
+    const { data } = await http.post('/features/export', payload)
     return data
   },
   async settings(): Promise<{ featuresPath: string }> {

@@ -48,3 +48,14 @@ export type FeatureSummary = {
   outlineCount: number
   totalExampleRows: number
 }
+
+export type ScenarioExportSelection = {
+  scenarioId: string
+  selected: boolean
+  exampleRowIdsByTableId: Record<string, string[]>
+}
+
+export type ExportSelectionRequest = {
+  feature: FeatureDocument
+  scenarios: ScenarioExportSelection[]
+}

@@ -3,10 +3,19 @@ package com.cucumberstudio.exporter;
 import com.cucumberstudio.domain.*;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 @Component
 public class GherkinFeatureExporter {
 
     public String export(FeatureDocument document) {
+        return export(document, null);
+    }
+
+    public String export(FeatureDocument document, ExportSelection selection) {
         StringBuilder builder = new StringBuilder();
         appendTags(builder, document.getTags(), 0);
         builder.append("Feature: ").append(document.getName()).append("\n");
@@ -29,7 +38,11 @@ public class GherkinFeatureExporter {
             builder.append("\n");
         }
 
+        Map<String, Set<String>> selectedRowsByTableId = selection == null ? Map.of() : selection.selectedRowsByTableId();
         for (ScenarioNode scenario : document.getScenarios()) {
+            if (selection != null && !selection.selectedScenarioIds().contains(scenario.getId())) {
+                continue;
+            }
             appendTags(builder, scenario.getTags(), 2);
             builder.append("  ");
             if (scenario.getType() == ScenarioType.OUTLINE) {
@@ -45,6 +58,7 @@ public class GherkinFeatureExporter {
             if (scenario.getType() == ScenarioType.OUTLINE) {
                 builder.append("\n");
                 for (ExampleTable table : scenario.getExampleTables()) {
+                    Set<String> selectedRows = selectedRowsByTableId.get(table.getId());
                     appendTags(builder, table.getTags(), 4);
                     builder.append("    Examples:");
                     if (table.getName() != null && !table.getName().isBlank()) {
@@ -53,6 +67,9 @@ public class GherkinFeatureExporter {
                     builder.append("\n");
                     appendTableRow(builder, table.getColumns(), 6, false);
                     for (ExampleRow row : table.getRows()) {
+                        if (selectedRows != null && !selectedRows.contains(row.getId())) {
+                            continue;
+                        }
                         appendTableRow(
                                 builder,
                                 table.getColumns().stream().map(column -> row.getValues().getOrDefault(column, "")).toList(),
@@ -66,6 +83,17 @@ public class GherkinFeatureExporter {
             builder.append("\n");
         }
         return builder.toString().stripTrailing() + "\n";
+    }
+
+    public record ExportSelection(
+            Set<String> selectedScenarioIds,
+            Map<String, Set<String>> selectedRowsByTableId
+    ) {
+        public static ExportSelection from(Map<String, List<String>> scenarioIdsByTableId, List<String> scenarioIds) {
+            Map<String, Set<String>> rowIds = new HashMap<>();
+            scenarioIdsByTableId.forEach((tableId, values) -> rowIds.put(tableId, Set.copyOf(values)));
+            return new ExportSelection(Set.copyOf(scenarioIds), rowIds);
+        }
     }
 
     private void appendTags(StringBuilder builder, java.util.List<String> tags, int indent) {
