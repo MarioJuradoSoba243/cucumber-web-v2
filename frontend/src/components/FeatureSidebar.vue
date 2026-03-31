@@ -59,8 +59,8 @@ function askMove(sourcePath: string) {
 
 <template>
   <aside :class="['sidebar', { collapsed }]">
-    <div class="sidebar-header">
-      <button class="ghost icon-btn" @click="emit('toggle')">{{ collapsed ? '☰' : '⟨' }}</button>
+      <div class="sidebar-header">
+      <button class="ghost icon-btn" title="Contraer barra lateral" @click="emit('toggle')">{{ collapsed ? '☰' : '⟨' }}</button>
       <div v-if="!collapsed" class="brand">
         <h2>Cucumber Studio</h2>
         <span>QA Workspace</span>
@@ -97,7 +97,7 @@ function askMove(sourcePath: string) {
       <div class="sidebar-footer">
         <input v-model="folderPath" placeholder="Carpeta destino (opcional)" />
         <input v-model="featureName" placeholder="Nueva feature" @keyup.enter="createFeature" />
-        <button class="primary" @click="createFeature">+ Nueva feature</button>
+        <button class="primary icon-only" title="Crear feature" @click="createFeature">➕</button>
       </div>
     </template>
   </aside>

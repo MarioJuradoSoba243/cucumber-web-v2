@@ -34,9 +34,9 @@ const nodeLabel = computed(() => {
       <button class="ghost icon-btn tiny" @click="expanded = !expanded">{{ expanded ? '▾' : '▸' }}</button>
       <button class="folder-label" :title="currentPath || props.rootPath" @click="emit('createFeature', currentPath)">📁 {{ nodeLabel }}</button>
       <div class="node-actions">
-        <button class="ghost tiny" @click="emit('createFolder', currentPath)">+ dir</button>
-        <button v-if="currentPath" class="ghost tiny" @click="emit('renamePath', currentPath)">Renombrar</button>
-        <button v-if="currentPath" class="ghost tiny" @click="emit('movePath', currentPath)">Mover</button>
+        <button class="ghost tiny icon-only" title="Nueva carpeta" @click="emit('createFolder', currentPath)">📁➕</button>
+        <button v-if="currentPath" class="ghost tiny icon-only" title="Renombrar" @click="emit('renamePath', currentPath)">✏️</button>
+        <button v-if="currentPath" class="ghost tiny icon-only" title="Mover" @click="emit('movePath', currentPath)">↔️</button>
       </div>
     </div>
 
@@ -51,8 +51,8 @@ const nodeLabel = computed(() => {
         <div class="feature-item-title">🧪 {{ feature.name }}</div>
         <div class="meta">{{ feature.scenarioCount }} escenarios</div>
         <div class="row-actions">
-          <button class="ghost tiny" type="button" @click.stop="emit('renamePath', feature.id)">Renombrar</button>
-          <button class="ghost tiny" type="button" @click.stop="emit('movePath', feature.id)">Mover</button>
+          <button class="ghost tiny icon-only" title="Renombrar feature" type="button" @click.stop="emit('renamePath', feature.id)">✏️</button>
+          <button class="ghost tiny icon-only" title="Mover feature" type="button" @click.stop="emit('movePath', feature.id)">↔️</button>
         </div>
       </button>
 
