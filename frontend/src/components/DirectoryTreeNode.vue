@@ -49,11 +49,12 @@ const nodeLabel = computed(() => {
         :style="{ marginLeft: `${featureIndent}px`, width: `calc(100% - ${featureIndent}px)` }"
         @click="emit('select', feature.id)"
       >
-        <div class="feature-item-title">🧪 {{ feature.name }}</div>
-        <div class="meta">{{ feature.scenarioCount }} escenarios</div>
-        <div class="row-actions">
-          <button class="ghost tiny icon-only" title="Renombrar feature" type="button" @click.stop="emit('renamePath', feature.id)">✏️</button>
-          <button class="ghost tiny icon-only" title="Mover feature" type="button" @click.stop="emit('movePath', feature.id)">↔️</button>
+        <div class="feature-row">
+          <div class="feature-item-title" :title="feature.name">🧪 {{ feature.name }}</div>
+          <div class="row-actions">
+            <button class="ghost tiny icon-only" title="Renombrar feature" type="button" @click.stop="emit('renamePath', feature.id)">✏️</button>
+            <button class="ghost tiny icon-only" title="Mover feature" type="button" @click.stop="emit('movePath', feature.id)">↔️</button>
+          </div>
         </div>
       </button>
 

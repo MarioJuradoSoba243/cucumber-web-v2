@@ -307,7 +307,7 @@ body.dark-theme .validation {
   gap: 0.12rem;
   margin-bottom: 0.12rem;
   min-width: 0;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .folder-label {
@@ -325,13 +325,14 @@ body.dark-theme .validation {
 .node-actions {
   display: flex;
   gap: 0.12rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .row-actions {
-  margin-top: 0.12rem;
   display: flex;
   gap: 0.14rem;
+  flex-wrap: nowrap;
+  margin-left: auto;
 }
 
 .tree-feature {
@@ -339,9 +340,9 @@ body.dark-theme .validation {
 }
 
 .tiny {
-  padding: 0.08rem 0.18rem;
+  padding: 0.04rem 0.14rem;
   border-radius: 6px;
-  font-size: 0.64rem;
+  font-size: 0.6rem;
 }
 
 .feature-item {
@@ -349,7 +350,7 @@ body.dark-theme .validation {
   text-align: left;
   border: 1px solid rgba(255, 255, 255, 0.15);
   margin: 0;
-  padding: 0.32rem 0.36rem;
+  padding: 0.24rem 0.3rem;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
@@ -371,6 +372,21 @@ body.dark-theme .validation {
 .feature-item-title { font-weight: 600; margin-bottom: 0.05rem; font-size: 0.78rem; }
 .feature-item-title, .folder-label { color: #ffffff; }
 .meta, .muted { color: #f1f5f9; font-size: 0.68rem; }
+.feature-row {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.feature-item-title {
+  margin-bottom: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
 
 .sidebar-footer {
   margin-top: auto;
