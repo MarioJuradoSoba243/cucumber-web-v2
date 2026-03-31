@@ -6,7 +6,13 @@ import MetricCards from '../components/MetricCards.vue'
 import ScenarioEditor from '../components/ScenarioEditor.vue'
 import GherkinPreview from '../components/GherkinPreview.vue'
 import ExportManager from '../components/ExportManager.vue'
+import FeatureWizard from '../components/wizard/FeatureWizard.vue'
+import GlobalSearch from '../components/search/GlobalSearch.vue'
+import TemplateLibrary from '../components/templates/TemplateLibrary.vue'
+import TemplateEditor from '../components/templates/TemplateEditor.vue'
+import TemplateApplyDialog from '../components/templates/TemplateApplyDialog.vue'
 import { useGherkinPreview } from '../composables/useGherkinPreview'
+import type { TemplateDocument } from '../types/feature'
 
 const store = useFeatureStore()
 const activeTab = ref<'overview' | 'scenarios' | 'examples' | 'preview' | 'export'>('overview')
@@ -14,6 +20,9 @@ const { render } = useGherkinPreview()
 const sidebarCollapsed = ref(false)
 const darkMode = ref(false)
 const exportedMessage = ref('')
+const mode = ref<'classic' | 'wizard'>('classic')
+const editingTemplate = ref<TemplateDocument | null>(null)
+const applyingTemplate = ref<TemplateDocument | null>(null)
 const baseline = ref('')
 
 onMounted(() => {
@@ -77,6 +86,17 @@ function handleCreateFeature(name: string) {
   store.createFeature(name)
 }
 
+function selectSearchResult(payload: { featureId: string; field: string }) {
+  store.openFeature(payload.featureId)
+  if (payload.field === 'name' || payload.field === 'description') {
+    activeTab.value = 'overview'
+  } else if (payload.field === 'step') {
+    activeTab.value = 'scenarios'
+  } else if (payload.field === 'column' || payload.field === 'value') {
+    activeTab.value = 'examples'
+  }
+}
+
 async function saveFeature() {
   await store.saveFeature()
   if (store.selectedFeature) {
@@ -113,6 +133,9 @@ async function saveFeature() {
           </span>
           <button class="ghost" @click="darkMode = !darkMode">{{ darkMode ? '☀️ Modo claro' : '🌙 Modo oscuro' }}</button>
           <button class="secondary" :disabled="!store.selectedFeature" @click="activeTab = 'export'">Exportar</button>
+          <button class="secondary" :disabled="!store.selectedFeature" @click="mode = mode === 'classic' ? 'wizard' : 'classic'">
+            {{ mode === 'classic' ? 'Modo wizard' : 'Modo clásico' }}
+          </button>
           <button class="primary" :disabled="!store.selectedFeature" @click="saveFeature">Guardar</button>
         </div>
       </header>
@@ -122,8 +145,14 @@ async function saveFeature() {
       <p v-if="store.error" class="validation">{{ store.error }}</p>
 
       <MetricCards :metrics="store.metrics" />
+      <GlobalSearch @select="selectSearchResult" />
+      <TemplateLibrary @create="editingTemplate = { name: '', description: '', tags: [], scope: 'SCENARIO', content: '' }" @edit="(tpl) => editingTemplate = tpl" @apply="(tpl) => applyingTemplate = tpl" />
+      <TemplateEditor v-model="editingTemplate" @saved="store.message = 'Plantilla guardada'" />
+      <TemplateApplyDialog :template="applyingTemplate" @close="applyingTemplate = null" @applied="(preview) => { if(store.selectedFeature) { store.selectedFeature.description = `${store.selectedFeature.description}\\n${preview}`; applyingTemplate = null } }" />
 
       <div v-if="store.selectedFeature" class="panel card">
+        <FeatureWizard v-if="mode === 'wizard'" :feature="store.selectedFeature" :exported-message="exportedMessage" @save-draft="saveFeature" />
+        <template v-if="mode === 'classic'">
         <div class="tabs">
           <button :class="{ active: activeTab === 'overview' }" @click="activeTab = 'overview'">Overview</button>
           <button :class="{ active: activeTab === 'scenarios' }" @click="activeTab = 'scenarios'">Scenarios</button>
@@ -175,6 +204,7 @@ async function saveFeature() {
         <section v-if="activeTab === 'export'" class="tab-content fade-in">
           <ExportManager :feature="store.selectedFeature" @done="(msg) => { exportedMessage = msg }" />
         </section>
+        </template>
       </div>
 
       <div v-else class="empty card">Selecciona una feature para empezar.</div>

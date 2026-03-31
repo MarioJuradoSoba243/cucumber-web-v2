@@ -20,6 +20,9 @@ public class FeatureValidator {
         if (document.getName() == null || document.getName().isBlank()) {
             result.errors().add("Feature name cannot be empty");
         }
+        if (document.getScenarios().isEmpty()) {
+            result.errors().add("Feature must include at least one scenario");
+        }
         for (ScenarioNode scenario : document.getScenarios()) {
             if (scenario.getName() == null || scenario.getName().isBlank()) {
                 result.errors().add("Scenario name cannot be empty");
@@ -32,6 +35,10 @@ public class FeatureValidator {
     }
 
     private void validateOutline(ScenarioNode outline, ValidationResult result) {
+        if (outline.getExampleTables().isEmpty()) {
+            result.errors().add("Outline without examples table: " + outline.getName());
+            return;
+        }
         Set<String> placeholders = parser.collectPlaceholders(outline);
         Set<String> columns = new LinkedHashSet<>();
         for (ExampleTable table : outline.getExampleTables()) {

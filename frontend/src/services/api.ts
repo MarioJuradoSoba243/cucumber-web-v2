@@ -1,5 +1,13 @@
 import axios from 'axios'
-import type { ExportSelectionRequest, FeatureDocument, FeatureSummary } from '../types/feature'
+import type {
+  ExportSelectionRequest,
+  FeatureDocument,
+  FeatureSummary,
+  SearchPage,
+  SearchType,
+  StepValidationResponse,
+  TemplateDocument
+} from '../types/feature'
 
 const http = axios.create({ baseURL: '/api' })
 
@@ -35,6 +43,37 @@ export const api = {
   },
   async settings(): Promise<{ featuresPath: string }> {
     const { data } = await http.get('/settings/features-path')
+    return data
+  },
+  async validateFeatureStep(feature: FeatureDocument, step: 'feature' | 'scenarios' | 'examples' | 'final'): Promise<StepValidationResponse> {
+    const { data } = await http.post('/features/validate', feature, { params: { step } })
+    return data
+  },
+  async search(params: { q: string; types?: SearchType[]; tags?: string[]; path?: string; page?: number; size?: number }): Promise<SearchPage> {
+    const { data } = await http.get('/search', { params })
+    return data
+  },
+  async listTemplates(): Promise<TemplateDocument[]> {
+    const { data } = await http.get('/templates')
+    return data
+  },
+  async getTemplate(id: string): Promise<TemplateDocument> {
+    const { data } = await http.get(`/templates/${id}`)
+    return data
+  },
+  async createTemplate(payload: TemplateDocument): Promise<TemplateDocument> {
+    const { data } = await http.post('/templates', payload)
+    return data
+  },
+  async updateTemplate(id: string, payload: TemplateDocument): Promise<TemplateDocument> {
+    const { data } = await http.put(`/templates/${id}`, payload)
+    return data
+  },
+  async deleteTemplate(id: string): Promise<void> {
+    await http.delete(`/templates/${id}`)
+  },
+  async applyTemplate(id: string, placeholders: Record<string, string>): Promise<{ scope: string; preview: string; placeholders: Record<string, string> }> {
+    const { data } = await http.post(`/templates/${id}/apply`, { placeholders })
     return data
   }
 }
