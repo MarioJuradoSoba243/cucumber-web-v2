@@ -5,11 +5,11 @@ import FeatureSidebar from '../components/FeatureSidebar.vue'
 import MetricCards from '../components/MetricCards.vue'
 import ScenarioEditor from '../components/ScenarioEditor.vue'
 import GherkinPreview from '../components/GherkinPreview.vue'
+import ExportManager from '../components/ExportManager.vue'
 import { useGherkinPreview } from '../composables/useGherkinPreview'
-import { api } from '../services/api'
 
 const store = useFeatureStore()
-const activeTab = ref<'overview' | 'scenarios' | 'examples' | 'preview'>('overview')
+const activeTab = ref<'overview' | 'scenarios' | 'examples' | 'preview' | 'export'>('overview')
 const { render } = useGherkinPreview()
 const sidebarCollapsed = ref(false)
 const darkMode = ref(false)
@@ -84,17 +84,6 @@ async function saveFeature() {
   }
 }
 
-async function exportCurrentFeature() {
-  if (!store.selectedFeature) return
-  const content = await api.exportFeature(store.selectedFeature.id)
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = store.selectedFeature.id
-  link.click()
-  URL.revokeObjectURL(link.href)
-  exportedMessage.value = 'Exportación completada'
-}
 </script>
 
 <template>
@@ -123,7 +112,7 @@ async function exportCurrentFeature() {
             {{ hasPendingChanges ? 'Cambios pendientes' : 'Guardado' }}
           </span>
           <button class="ghost" @click="darkMode = !darkMode">{{ darkMode ? '☀️ Modo claro' : '🌙 Modo oscuro' }}</button>
-          <button class="secondary" :disabled="!store.selectedFeature" @click="exportCurrentFeature">Exportar</button>
+          <button class="secondary" :disabled="!store.selectedFeature" @click="activeTab = 'export'">Exportar</button>
           <button class="primary" :disabled="!store.selectedFeature" @click="saveFeature">Guardar</button>
         </div>
       </header>
@@ -139,6 +128,7 @@ async function exportCurrentFeature() {
           <button :class="{ active: activeTab === 'overview' }" @click="activeTab = 'overview'">Overview</button>
           <button :class="{ active: activeTab === 'scenarios' }" @click="activeTab = 'scenarios'">Scenarios</button>
           <button :class="{ active: activeTab === 'examples' }" @click="activeTab = 'examples'">Examples</button>
+          <button :class="{ active: activeTab === 'export' }" @click="activeTab = 'export'">Export</button>
           <button :class="{ active: activeTab === 'preview' }" @click="activeTab = 'preview'">Preview</button>
         </div>
 
@@ -180,6 +170,10 @@ async function exportCurrentFeature() {
 
         <section v-if="activeTab === 'preview'" class="tab-content fade-in">
           <GherkinPreview :content="preview" />
+        </section>
+
+        <section v-if="activeTab === 'export'" class="tab-content fade-in">
+          <ExportManager :feature="store.selectedFeature" @done="(msg) => { exportedMessage = msg }" />
         </section>
       </div>
 

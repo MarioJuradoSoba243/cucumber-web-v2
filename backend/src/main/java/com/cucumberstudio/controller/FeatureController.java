@@ -105,6 +105,16 @@ public class FeatureController {
                 .body(content);
     }
 
+    @PostMapping("/features/export")
+    public ResponseEntity<String> customExport(@RequestBody FeatureDtos.ExportSelectionRequest request) {
+        log.info("Exporting selected feature subset");
+        String content = service.exportSelected(request);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=feature.feature")
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(content);
+    }
+
     @PostMapping("/import/rescan")
     public Map<String, Long> rescan() throws IOException {
         log.info("Rescanning features directory");

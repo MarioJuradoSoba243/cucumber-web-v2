@@ -16,7 +16,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -99,6 +102,27 @@ public class FeatureService {
         log.debug("Exporting feature file {}", path);
         FeatureDocument document = parser.parse(Files.readString(path), path);
         return exporter.export(document);
+    }
+
+    public String exportSelected(FeatureDtos.ExportSelectionRequest request) {
+        if (request == null || request.feature() == null) {
+            throw new IllegalArgumentException("Feature payload is required for custom export");
+        }
+        FeatureDocument document = mapper.toDomain(request.feature());
+        Set<String> scenarioIds = request.safeScenarios().stream()
+                .filter(FeatureDtos.ScenarioExportSelectionDto::selected)
+                .map(FeatureDtos.ScenarioExportSelectionDto::scenarioId)
+                .collect(java.util.stream.Collectors.toSet());
+
+        Map<String, Set<String>> rowIdsByTable = new HashMap<>();
+        request.safeScenarios().forEach(selection -> selection.safeExampleRowsByTable().forEach((tableId, rowIds) -> {
+            if (rowIds == null) {
+                return;
+            }
+            rowIdsByTable.put(tableId, Set.copyOf(rowIds));
+        }));
+
+        return exporter.export(document, new GherkinFeatureExporter.ExportSelection(scenarioIds, rowIdsByTable));
     }
 
     public String getFeaturesPath() {
