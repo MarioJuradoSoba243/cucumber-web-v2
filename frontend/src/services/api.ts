@@ -1,5 +1,11 @@
 import axios from 'axios'
-import type { ExportSelectionRequest, FeatureDocument, FeatureSummary } from '../types/feature'
+import type {
+  ExportSelectionRequest,
+  FeatureDocument,
+  FeatureSummary,
+  SearchPage,
+  SearchType
+} from '../types/feature'
 
 const http = axios.create({ baseURL: '/api' })
 
@@ -35,6 +41,10 @@ export const api = {
   },
   async settings(): Promise<{ featuresPath: string }> {
     const { data } = await http.get('/settings/features-path')
+    return data
+  },
+  async search(params: { q: string; types?: SearchType[]; tags?: string[]; path?: string; page?: number; size?: number }): Promise<SearchPage> {
+    const { data } = await http.get('/search', { params })
     return data
   }
 }

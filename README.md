@@ -94,3 +94,19 @@ mvn test
 - Dominio separado de DTOs con mapeador dedicado.
 - Exportador centralizado para garantizar formato consistente.
 - UI dividida por componentes reutilizables (`FeatureSidebar`, `ScenarioEditor`, `ExamplesTableEditor`, `GherkinPreview`).
+
+## Nuevas funcionalidades
+
+### 1) Búsqueda global
+
+- Usa la caja **Búsqueda global** o el atajo `Ctrl/Cmd + K`.
+- Busca en nombre/descripción/tags de feature, scenarios, steps y values/columnas de examples.
+- Endpoint: `GET /api/search?q=...&types=feature&tags=smoke&page=0&size=10`.
+- Resultado agrupado por feature con resaltado (`<mark>`) y navegación al editor.
+
+## Testing frontend
+
+```bash
+cd frontend
+npm test
+```

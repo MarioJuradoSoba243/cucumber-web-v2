@@ -6,6 +6,7 @@ import MetricCards from '../components/MetricCards.vue'
 import ScenarioEditor from '../components/ScenarioEditor.vue'
 import GherkinPreview from '../components/GherkinPreview.vue'
 import ExportManager from '../components/ExportManager.vue'
+import GlobalSearch from '../components/search/GlobalSearch.vue'
 import { useGherkinPreview } from '../composables/useGherkinPreview'
 
 const store = useFeatureStore()
@@ -14,6 +15,7 @@ const { render } = useGherkinPreview()
 const sidebarCollapsed = ref(false)
 const darkMode = ref(false)
 const exportedMessage = ref('')
+const showSearchPanel = ref(false)
 const baseline = ref('')
 
 onMounted(() => {
@@ -77,6 +79,17 @@ function handleCreateFeature(name: string) {
   store.createFeature(name)
 }
 
+function selectSearchResult(payload: { featureId: string; field: string }) {
+  store.openFeature(payload.featureId)
+  if (payload.field === 'name' || payload.field === 'description') {
+    activeTab.value = 'overview'
+  } else if (payload.field === 'step') {
+    activeTab.value = 'scenarios'
+  } else if (payload.field === 'column' || payload.field === 'value') {
+    activeTab.value = 'examples'
+  }
+}
+
 async function saveFeature() {
   await store.saveFeature()
   if (store.selectedFeature) {
@@ -113,6 +126,7 @@ async function saveFeature() {
           </span>
           <button class="ghost" @click="darkMode = !darkMode">{{ darkMode ? '☀️ Modo claro' : '🌙 Modo oscuro' }}</button>
           <button class="secondary" :disabled="!store.selectedFeature" @click="activeTab = 'export'">Exportar</button>
+          <button class="secondary" @click="showSearchPanel = true">Búsqueda global</button>
           <button class="primary" :disabled="!store.selectedFeature" @click="saveFeature">Guardar</button>
         </div>
       </header>
@@ -122,7 +136,6 @@ async function saveFeature() {
       <p v-if="store.error" class="validation">{{ store.error }}</p>
 
       <MetricCards :metrics="store.metrics" />
-
       <div v-if="store.selectedFeature" class="panel card">
         <div class="tabs">
           <button :class="{ active: activeTab === 'overview' }" @click="activeTab = 'overview'">Overview</button>
@@ -178,6 +191,18 @@ async function saveFeature() {
       </div>
 
       <div v-else class="empty card">Selecciona una feature para empezar.</div>
+
+      <teleport to="body">
+        <div v-if="showSearchPanel" class="overlay" @click.self="showSearchPanel = false">
+          <div class="overlay-panel card">
+            <div class="topbar-actions">
+              <h3>Búsqueda global</h3>
+              <button class="ghost" @click="showSearchPanel = false">Cerrar</button>
+            </div>
+            <GlobalSearch @select="(payload) => { selectSearchResult(payload); showSearchPanel = false }" />
+          </div>
+        </div>
+      </teleport>
     </main>
   </div>
 </template>
