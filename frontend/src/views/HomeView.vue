@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import type { DirectoryNode } from '../types/feature'
 import { useFeatureStore } from '../stores/featureStore'
 import FeatureSidebar from '../components/FeatureSidebar.vue'
 import MetricCards from '../components/MetricCards.vue'
@@ -63,6 +64,38 @@ const hasPendingChanges = computed(() => {
 
 const outlineScenarios = computed(() => store.selectedFeature?.scenarios.filter((scenario) => scenario.type === 'OUTLINE') ?? [])
 
+
+function filterTree(node: DirectoryNode | null, rawQuery: string): DirectoryNode | null {
+  if (!node) return null
+  const normalizedQuery = rawQuery.trim().toLowerCase()
+  if (!normalizedQuery) return node
+
+  const filteredFeatures = node.features.filter((feature) =>
+    feature.name.toLowerCase().includes(normalizedQuery)
+    || feature.id.toLowerCase().includes(normalizedQuery)
+    || (feature.filePath ?? '').toLowerCase().includes(normalizedQuery)
+  )
+
+  const filteredFolders = node.folders
+    .map((folder) => filterTree(folder, normalizedQuery))
+    .filter((folder): folder is DirectoryNode => folder !== null)
+
+  const folderMatches = node.name.toLowerCase().includes(normalizedQuery)
+    || node.path.toLowerCase().includes(normalizedQuery)
+
+  if (!folderMatches && !filteredFeatures.length && !filteredFolders.length) {
+    return null
+  }
+
+  return {
+    ...node,
+    features: filteredFeatures,
+    folders: filteredFolders
+  }
+}
+
+const filteredTree = computed(() => filterTree(store.tree, store.query))
+
 function open(id: string) {
   store.openFeature(id)
   exportedMessage.value = ''
@@ -119,7 +152,7 @@ async function saveFeature() {
 <template>
   <div :class="['layout', { dark: darkMode }]">
     <FeatureSidebar
-      :tree="store.tree"
+      :tree="filteredTree"
       :selected-id="store.selectedFeature?.id"
       :loading="store.loading"
       :query="store.query"

@@ -10,6 +10,8 @@ import com.cucumberstudio.search.dto.SearchDtos;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 @Service
 public class SearchService {
     private static final Set<String> ALLOWED_TYPES = Set.of("feature", "scenario", "outline", "example");
+    private static final List<Charset> FEATURE_CHARSETS = List.of(StandardCharsets.UTF_8, StandardCharsets.ISO_8859_1);
     private final CucumberProperties properties;
     private final GherkinFeatureParser parser;
 
@@ -41,7 +44,7 @@ public class SearchService {
                 if (!pathFilter.isBlank() && !path.toString().toLowerCase().contains(pathFilter)) {
                     continue;
                 }
-                FeatureDocument doc = parser.parse(Files.readString(path, StandardCharsets.UTF_8), path);
+                FeatureDocument doc = parser.parse(readFeatureContent(path), path);
                 collectMatches(doc, q, types, tags, matches);
             }
         }
@@ -169,6 +172,21 @@ public class SearchService {
 
     private Path featuresPath() {
         return Path.of(properties.getFeaturesPath()).toAbsolutePath().normalize();
+    }
+
+    private String readFeatureContent(Path path) throws IOException {
+        IOException lastException = null;
+        for (Charset charset : FEATURE_CHARSETS) {
+            try {
+                return Files.readString(path, charset);
+            } catch (CharacterCodingException ex) {
+                lastException = new IOException("Cannot decode feature with charset " + charset, ex);
+            }
+        }
+        if (lastException != null) {
+            throw lastException;
+        }
+        throw new IOException("Unable to read feature file: " + path);
     }
 
     private record SearchHitContext(String featureId, String featureName, String filePath, SearchDtos.SearchHitDto hit) {
