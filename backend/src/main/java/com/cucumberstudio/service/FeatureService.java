@@ -135,6 +135,43 @@ public class FeatureService {
         }
     }
 
+    public FeatureDtos.DirectoryNodeDto getDirectoryTree() throws IOException {
+        Path root = featuresPath();
+        Files.createDirectories(root);
+        return buildDirectoryNode(root, root);
+    }
+
+    public FeatureDtos.DirectoryNodeDto createFolder(FeatureDtos.CreateFolderRequestDto request) throws IOException {
+        Path parent = resolveDirectoryPath(request.parentPath());
+        Path newFolder = parent.resolve(sanitizeName(request.name())).normalize();
+        ensureInsideRoot(newFolder);
+        Files.createDirectories(newFolder);
+        return getDirectoryTree();
+    }
+
+    public FeatureDtos.DirectoryNodeDto renamePath(FeatureDtos.RenamePathRequestDto request) throws IOException {
+        Path source = resolvePath(request.path());
+        if (!Files.exists(source)) {
+            throw new NotFoundException("Path not found: " + request.path());
+        }
+        Path target = source.resolveSibling(sanitizeName(request.newName())).normalize();
+        ensureInsideRoot(target);
+        Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+        return getDirectoryTree();
+    }
+
+    public FeatureDtos.DirectoryNodeDto movePath(FeatureDtos.MovePathRequestDto request) throws IOException {
+        Path source = resolvePath(request.sourcePath());
+        if (!Files.exists(source)) {
+            throw new NotFoundException("Path not found: " + request.sourcePath());
+        }
+        Path destinationFolder = resolveDirectoryPath(request.destinationFolderPath());
+        Path target = destinationFolder.resolve(source.getFileName()).normalize();
+        ensureInsideRoot(target);
+        Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+        return getDirectoryTree();
+    }
+
     private FeatureDocument parseFileQuietly(Path path) {
         try {
             return parser.parse(Files.readString(path, StandardCharsets.UTF_8), path);
@@ -165,14 +202,79 @@ public class FeatureService {
     }
 
     private Path resolveFromId(String id) {
-        Path raw = Path.of(id);
-        if (raw.isAbsolute()) {
-            return raw;
-        }
-        return featuresPath().resolve(id).normalize();
+        return resolvePath(id);
     }
 
     private Path featuresPath() {
         return Path.of(properties.getFeaturesPath()).toAbsolutePath().normalize();
+    }
+
+    private FeatureDtos.DirectoryNodeDto buildDirectoryNode(Path nodePath, Path root) throws IOException {
+        List<Path> children;
+        try (var stream = Files.list(nodePath)) {
+            children = stream.sorted(Comparator.comparing(Path::toString)).toList();
+        }
+        List<FeatureDtos.DirectoryNodeDto> folders = children.stream()
+                .filter(Files::isDirectory)
+                .map(path -> {
+                    try {
+                        return buildDirectoryNode(path, root);
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                })
+                .toList();
+        List<FeatureDtos.FeatureSummaryDto> features = children.stream()
+                .filter(path -> path.toString().endsWith(".feature"))
+                .map(this::parseFileQuietly)
+                .map(mapper::toSummary)
+                .toList();
+        return new FeatureDtos.DirectoryNodeDto(
+                toRelative(root, nodePath).isBlank() ? "/" : toRelative(root, nodePath),
+                nodePath.getFileName() == null ? root.getFileName().toString() : nodePath.getFileName().toString(),
+                toRelative(root, nodePath),
+                folders,
+                features
+        );
+    }
+
+    private Path resolvePath(String rawPath) {
+        Path candidate = Path.of(rawPath);
+        Path resolved = candidate.isAbsolute() ? candidate.normalize() : featuresPath().resolve(candidate).normalize();
+        ensureInsideRoot(resolved);
+        return resolved;
+    }
+
+    private Path resolveDirectoryPath(String rawPath) {
+        Path path = resolvePath(rawPath);
+        if (Files.exists(path) && !Files.isDirectory(path)) {
+            throw new IllegalArgumentException("Destination is not a folder: " + rawPath);
+        }
+        return path;
+    }
+
+    private void ensureInsideRoot(Path path) {
+        Path root = featuresPath();
+        if (!path.startsWith(root)) {
+            throw new IllegalArgumentException("Path outside features root is not allowed");
+        }
+    }
+
+    private String toRelative(Path root, Path target) {
+        if (root.equals(target)) {
+            return "";
+        }
+        return root.relativize(target).toString().replace('\\', '/');
+    }
+
+    private String sanitizeName(String name) {
+        String clean = name == null ? "" : name.trim();
+        if (clean.isBlank()) {
+            throw new IllegalArgumentException("Name is required");
+        }
+        if (clean.contains("/") || clean.contains("\\")) {
+            throw new IllegalArgumentException("Name must not contain path separators");
+        }
+        return clean;
     }
 }

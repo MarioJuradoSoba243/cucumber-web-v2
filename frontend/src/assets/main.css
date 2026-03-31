@@ -299,6 +299,43 @@ body.dark-theme .validation {
   overflow: auto;
 }
 
+.tree-folder {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.35rem;
+}
+
+.folder-label {
+  flex: 1;
+  text-align: left;
+  color: #e2e8f0;
+  background: transparent;
+  border: 0;
+  padding: 0.25rem 0.35rem;
+}
+
+.node-actions {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.row-actions {
+  margin-top: 0.35rem;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.tree-feature {
+  margin-bottom: 0.35rem;
+}
+
+.tiny {
+  padding: 0.2rem 0.45rem;
+  border-radius: 8px;
+  font-size: 0.72rem;
+}
+
 .feature-item {
   width: 100%;
   text-align: left;

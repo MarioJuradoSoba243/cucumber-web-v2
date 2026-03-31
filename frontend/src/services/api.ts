@@ -2,6 +2,7 @@ import axios from 'axios'
 import type {
   ExportSelectionRequest,
   FeatureDocument,
+  DirectoryNode,
   FeatureSummary,
   SearchPage,
   SearchType
@@ -41,6 +42,22 @@ export const api = {
   },
   async settings(): Promise<{ featuresPath: string }> {
     const { data } = await http.get('/settings/features-path')
+    return data
+  },
+  async getFoldersTree(): Promise<DirectoryNode> {
+    const { data } = await http.get('/folders/tree')
+    return data
+  },
+  async createFolder(parentPath: string, name: string): Promise<DirectoryNode> {
+    const { data } = await http.post('/folders', { parentPath, name })
+    return data
+  },
+  async renamePath(path: string, newName: string): Promise<DirectoryNode> {
+    const { data } = await http.put('/paths/rename', { path, newName })
+    return data
+  },
+  async movePath(sourcePath: string, destinationFolderPath: string): Promise<DirectoryNode> {
+    const { data } = await http.post('/paths/move', { sourcePath, destinationFolderPath })
     return data
   },
   async search(params: { q: string; types?: SearchType[]; tags?: string[]; path?: string; page?: number; size?: number }): Promise<SearchPage> {

@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FeatureServiceTest {
     @TempDir
@@ -36,5 +37,24 @@ class FeatureServiceTest {
         List<FeatureDtos.FeatureSummaryDto> features = service.listFeatures("login");
         assertEquals(1, features.size());
         assertEquals("Login", features.getFirst().name());
+    }
+
+    @Test
+    void shouldBuildTreeCreateRenameAndMovePaths() throws Exception {
+        Files.createDirectories(tempDir.resolve("auth"));
+        Files.writeString(tempDir.resolve("auth/login.feature"), "Feature: Login\n");
+
+        FeatureDtos.DirectoryNodeDto tree = service.getDirectoryTree();
+        assertEquals(1, tree.folders().size());
+        assertEquals("auth", tree.folders().getFirst().name());
+
+        service.createFolder(new FeatureDtos.CreateFolderRequestDto("auth", "api"));
+        assertTrue(Files.exists(tempDir.resolve("auth/api")));
+
+        service.renamePath(new FeatureDtos.RenamePathRequestDto("auth/login.feature", "signin.feature"));
+        assertTrue(Files.exists(tempDir.resolve("auth/signin.feature")));
+
+        service.movePath(new FeatureDtos.MovePathRequestDto("auth/signin.feature", "auth/api"));
+        assertTrue(Files.exists(tempDir.resolve("auth/api/signin.feature")));
     }
 }

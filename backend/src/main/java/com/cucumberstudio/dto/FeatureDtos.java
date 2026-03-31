@@ -92,6 +92,24 @@ public final class FeatureDtos {
     ) {
     }
 
+    public record DirectoryNodeDto(
+            String id,
+            String name,
+            String path,
+            List<DirectoryNodeDto> folders,
+            List<FeatureSummaryDto> features
+    ) {
+    }
+
+    public record CreateFolderRequestDto(@NotBlank String parentPath, @NotBlank String name) {
+    }
+
+    public record RenamePathRequestDto(@NotBlank String path, @NotBlank String newName) {
+    }
+
+    public record MovePathRequestDto(@NotBlank String sourcePath, @NotBlank String destinationFolderPath) {
+    }
+
     public static FeatureDocumentDto empty() {
         return new FeatureDocumentDto(
                 null,
