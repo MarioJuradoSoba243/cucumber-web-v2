@@ -13,18 +13,23 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class FeatureService {
     private static final Logger log = LoggerFactory.getLogger(FeatureService.class);
+    private static final List<Charset> FEATURE_CHARSETS = List.of(StandardCharsets.UTF_8, StandardCharsets.ISO_8859_1);
     private final CucumberProperties properties;
     private final GherkinFeatureParser parser;
     private final GherkinFeatureExporter exporter;
@@ -44,13 +49,22 @@ public class FeatureService {
         String safeQuery = query == null ? "" : query.toLowerCase();
         log.debug("Scanning features in {} with query {}", featuresPath(), safeQuery);
         try (var stream = Files.walk(featuresPath())) {
-            return stream
+            List<Path> featurePaths = stream
                     .filter(path -> path.toString().endsWith(".feature"))
                     .sorted(Comparator.comparing(Path::toString))
-                    .map(this::parseFileQuietly)
-                    .filter(document -> matches(document, safeQuery))
-                    .map(mapper::toSummary)
                     .toList();
+            List<FeatureDtos.FeatureSummaryDto> summaries = new ArrayList<>();
+            for (Path featurePath : featurePaths) {
+                Optional<FeatureDocument> maybeDocument = parseFileQuietly(featurePath);
+                if (maybeDocument.isEmpty()) {
+                    continue;
+                }
+                FeatureDocument document = maybeDocument.get();
+                if (matches(document, safeQuery)) {
+                    summaries.add(mapper.toSummary(document));
+                }
+            }
+            return summaries;
         }
     }
 
@@ -60,7 +74,7 @@ public class FeatureService {
         if (!Files.exists(path)) {
             throw new NotFoundException("Feature not found: " + id);
         }
-        FeatureDocument doc = parser.parse(Files.readString(path), path);
+        FeatureDocument doc = parseFile(path);
         return mapper.toDto(doc, validator.validate(doc));
     }
 
@@ -100,7 +114,7 @@ public class FeatureService {
     public String exportFeature(String id) throws IOException {
         Path path = resolveFromId(id);
         log.debug("Exporting feature file {}", path);
-        FeatureDocument document = parser.parse(Files.readString(path), path);
+        FeatureDocument document = parseFile(path);
         return exporter.export(document);
     }
 
@@ -172,11 +186,12 @@ public class FeatureService {
         return getDirectoryTree();
     }
 
-    private FeatureDocument parseFileQuietly(Path path) {
+    private Optional<FeatureDocument> parseFileQuietly(Path path) {
         try {
-            return parser.parse(Files.readString(path, StandardCharsets.UTF_8), path);
+            return Optional.of(parseFile(path));
         } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            log.warn("Skipping unreadable feature file {}: {}", path, ex.getMessage());
+            return Optional.empty();
         }
     }
 
@@ -184,7 +199,8 @@ public class FeatureService {
         if (query.isBlank()) {
             return true;
         }
-        return document.getName().toLowerCase().contains(query)
+        String name = document.getName() == null ? "" : document.getName().toLowerCase();
+        return name.contains(query)
                 || document.getFilePath().toLowerCase().contains(query)
                 || document.getTags().stream().anyMatch(tag -> tag.toLowerCase().contains(query))
                 || (document.getDescription() != null && document.getDescription().toLowerCase().contains(query));
@@ -214,21 +230,19 @@ public class FeatureService {
         try (var stream = Files.list(nodePath)) {
             children = stream.sorted(Comparator.comparing(Path::toString)).toList();
         }
-        List<FeatureDtos.DirectoryNodeDto> folders = children.stream()
-                .filter(Files::isDirectory)
-                .map(path -> {
-                    try {
-                        return buildDirectoryNode(path, root);
-                    } catch (IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                })
-                .toList();
-        List<FeatureDtos.FeatureSummaryDto> features = children.stream()
-                .filter(path -> path.toString().endsWith(".feature"))
-                .map(this::parseFileQuietly)
-                .map(mapper::toSummary)
-                .toList();
+        List<FeatureDtos.DirectoryNodeDto> folders = new ArrayList<>();
+        for (Path child : children) {
+            if (Files.isDirectory(child)) {
+                folders.add(buildDirectoryNode(child, root));
+            }
+        }
+        List<FeatureDtos.FeatureSummaryDto> features = new ArrayList<>();
+        for (Path child : children) {
+            if (!child.toString().endsWith(".feature")) {
+                continue;
+            }
+            parseFileQuietly(child).ifPresent(feature -> features.add(mapper.toSummary(feature)));
+        }
         return new FeatureDtos.DirectoryNodeDto(
                 toRelative(root, nodePath).isBlank() ? "/" : toRelative(root, nodePath),
                 nodePath.getFileName() == null ? root.getFileName().toString() : nodePath.getFileName().toString(),
@@ -276,5 +290,29 @@ public class FeatureService {
             throw new IllegalArgumentException("Name must not contain path separators");
         }
         return clean;
+    }
+
+    private FeatureDocument parseFile(Path path) throws IOException {
+        String content = readFeatureContent(path);
+        FeatureDocument document = parser.parse(content, path);
+        if (document.getName() == null || document.getName().isBlank()) {
+            throw new IOException("Feature name is missing in file " + path);
+        }
+        return document;
+    }
+
+    private String readFeatureContent(Path path) throws IOException {
+        IOException lastException = null;
+        for (Charset charset : FEATURE_CHARSETS) {
+            try {
+                return Files.readString(path, charset);
+            } catch (CharacterCodingException ex) {
+                lastException = new IOException("Cannot decode feature with charset " + charset, ex);
+            }
+        }
+        if (lastException != null) {
+            throw lastException;
+        }
+        throw new IOException("Unable to read feature file: " + path);
     }
 }

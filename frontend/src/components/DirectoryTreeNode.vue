@@ -19,15 +19,20 @@ const emit = defineEmits<{
 
 const expanded = ref(true)
 const depth = computed(() => props.level ?? 0)
+const indent = computed(() => Math.min(depth.value * 14, 84))
 const currentPath = computed(() => props.node.path)
-const nodeLabel = computed(() => currentPath.value || props.rootPath)
+const nodeLabel = computed(() => {
+  if (!currentPath.value) return 'Raíz'
+  const parts = currentPath.value.split('/').filter(Boolean)
+  return parts.at(-1) ?? currentPath.value
+})
 </script>
 
 <template>
   <div class="tree-node">
-    <div class="tree-folder" :style="{ paddingLeft: `${depth * 14}px` }">
+    <div class="tree-folder" :style="{ paddingLeft: `${indent}px` }">
       <button class="ghost icon-btn tiny" @click="expanded = !expanded">{{ expanded ? '▾' : '▸' }}</button>
-      <button class="folder-label" @click="emit('createFeature', currentPath)">📁 {{ nodeLabel }}</button>
+      <button class="folder-label" :title="currentPath || props.rootPath" @click="emit('createFeature', currentPath)">📁 {{ nodeLabel }}</button>
       <div class="node-actions">
         <button class="ghost tiny" @click="emit('createFolder', currentPath)">+ dir</button>
         <button v-if="currentPath" class="ghost tiny" @click="emit('renamePath', currentPath)">Renombrar</button>
@@ -40,7 +45,7 @@ const nodeLabel = computed(() => currentPath.value || props.rootPath)
         v-for="feature in node.features"
         :key="feature.id"
         :class="['feature-item tree-feature', { active: selectedId === feature.id }]"
-        :style="{ marginLeft: `${(depth + 1) * 14}px` }"
+        :style="{ marginLeft: `${Math.min((depth + 1) * 14, 98)}px` }"
         @click="emit('select', feature.id)"
       >
         <div class="feature-item-title">🧪 {{ feature.name }}</div>
