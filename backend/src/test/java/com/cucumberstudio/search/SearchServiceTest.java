@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -57,4 +58,21 @@ class SearchServiceTest {
         assertEquals(1, page.results().size());
         assertTrue(page.results().getFirst().hits().getFirst().score() >= 95);
     }
+
+
+    @Test
+    void shouldReadLatin1EncodedFeatureFiles() throws Exception {
+        Files.writeString(
+                tempDir.resolve("latin1.feature"),
+                "Feature: Búsqueda global\n  Scenario: consulta\n    Given término con acentos\n",
+                StandardCharsets.ISO_8859_1
+        );
+
+        SearchDtos.SearchPageDto page = searchService.search(
+                SearchDtos.SearchRequestDto.fromQuery("búsqueda", List.of("feature"), List.of(), null, 0, 10)
+        );
+
+        assertEquals(1, page.total());
+    }
+
 }
