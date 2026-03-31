@@ -20,9 +20,11 @@ const { render } = useGherkinPreview()
 const sidebarCollapsed = ref(false)
 const darkMode = ref(false)
 const exportedMessage = ref('')
-const mode = ref<'classic' | 'wizard'>('classic')
 const editingTemplate = ref<TemplateDocument | null>(null)
 const applyingTemplate = ref<TemplateDocument | null>(null)
+const showSearchPanel = ref(false)
+const showTemplatePanel = ref(false)
+const showWizardModal = ref(false)
 const baseline = ref('')
 
 onMounted(() => {
@@ -133,9 +135,9 @@ async function saveFeature() {
           </span>
           <button class="ghost" @click="darkMode = !darkMode">{{ darkMode ? '☀️ Modo claro' : '🌙 Modo oscuro' }}</button>
           <button class="secondary" :disabled="!store.selectedFeature" @click="activeTab = 'export'">Exportar</button>
-          <button class="secondary" :disabled="!store.selectedFeature" @click="mode = mode === 'classic' ? 'wizard' : 'classic'">
-            {{ mode === 'classic' ? 'Modo wizard' : 'Modo clásico' }}
-          </button>
+          <button class="secondary" @click="showSearchPanel = true">Búsqueda global</button>
+          <button class="secondary" @click="showTemplatePanel = true">Plantillas</button>
+          <button class="secondary" :disabled="!store.selectedFeature" @click="showWizardModal = true">Abrir wizard</button>
           <button class="primary" :disabled="!store.selectedFeature" @click="saveFeature">Guardar</button>
         </div>
       </header>
@@ -145,14 +147,7 @@ async function saveFeature() {
       <p v-if="store.error" class="validation">{{ store.error }}</p>
 
       <MetricCards :metrics="store.metrics" />
-      <GlobalSearch @select="selectSearchResult" />
-      <TemplateLibrary @create="editingTemplate = { name: '', description: '', tags: [], scope: 'SCENARIO', content: '' }" @edit="(tpl) => editingTemplate = tpl" @apply="(tpl) => applyingTemplate = tpl" />
-      <TemplateEditor v-model="editingTemplate" @saved="store.message = 'Plantilla guardada'" />
-      <TemplateApplyDialog :template="applyingTemplate" @close="applyingTemplate = null" @applied="(preview) => { if(store.selectedFeature) { store.selectedFeature.description = `${store.selectedFeature.description}\\n${preview}`; applyingTemplate = null } }" />
-
       <div v-if="store.selectedFeature" class="panel card">
-        <FeatureWizard v-if="mode === 'wizard'" :feature="store.selectedFeature" :exported-message="exportedMessage" @save-draft="saveFeature" />
-        <template v-if="mode === 'classic'">
         <div class="tabs">
           <button :class="{ active: activeTab === 'overview' }" @click="activeTab = 'overview'">Overview</button>
           <button :class="{ active: activeTab === 'scenarios' }" @click="activeTab = 'scenarios'">Scenarios</button>
@@ -204,10 +199,47 @@ async function saveFeature() {
         <section v-if="activeTab === 'export'" class="tab-content fade-in">
           <ExportManager :feature="store.selectedFeature" @done="(msg) => { exportedMessage = msg }" />
         </section>
-        </template>
       </div>
 
       <div v-else class="empty card">Selecciona una feature para empezar.</div>
+
+      <teleport to="body">
+        <div v-if="showSearchPanel" class="overlay" @click.self="showSearchPanel = false">
+          <div class="overlay-panel card">
+            <div class="topbar-actions">
+              <h3>Búsqueda global</h3>
+              <button class="ghost" @click="showSearchPanel = false">Cerrar</button>
+            </div>
+            <GlobalSearch @select="(payload) => { selectSearchResult(payload); showSearchPanel = false }" />
+          </div>
+        </div>
+      </teleport>
+
+      <teleport to="body">
+        <div v-if="showTemplatePanel" class="overlay" @click.self="showTemplatePanel = false">
+          <div class="overlay-panel card">
+            <div class="topbar-actions">
+              <h3>Biblioteca de plantillas</h3>
+              <button class="ghost" @click="showTemplatePanel = false">Cerrar</button>
+            </div>
+            <TemplateLibrary @create="editingTemplate = { name: '', description: '', tags: [], scope: 'SCENARIO', content: '' }" @edit="(tpl) => editingTemplate = tpl" @apply="(tpl) => applyingTemplate = tpl" />
+            <TemplateEditor v-model="editingTemplate" @saved="store.message = 'Plantilla guardada'" />
+            <TemplateApplyDialog :template="applyingTemplate" @close="applyingTemplate = null" @applied="(preview) => { if(store.selectedFeature) { store.selectedFeature.description = `${store.selectedFeature.description}\\n${preview}`; applyingTemplate = null } }" />
+          </div>
+        </div>
+      </teleport>
+
+      <teleport to="body">
+        <div v-if="showWizardModal && store.selectedFeature" class="overlay" @click.self="showWizardModal = false">
+          <div class="overlay-panel card">
+            <div class="topbar-actions">
+              <h3>Wizard de edición</h3>
+              <button class="ghost" @click="showWizardModal = false">Cerrar</button>
+            </div>
+            <FeatureWizard :feature="store.selectedFeature" :exported-message="exportedMessage" @save-draft="saveFeature" />
+          </div>
+        </div>
+      </teleport>
     </main>
   </div>
 </template>

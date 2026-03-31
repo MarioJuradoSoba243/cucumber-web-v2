@@ -728,3 +728,21 @@ input:focus, textarea:focus, select:focus {
   .toolbar { flex-direction: column; align-items: stretch; }
   .step-row { grid-template-columns: 1fr; }
 }
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
+  overflow: auto;
+}
+
+.overlay-panel {
+  width: min(1100px, 100%);
+  max-height: calc(100vh - 4rem);
+  overflow: auto;
+}
