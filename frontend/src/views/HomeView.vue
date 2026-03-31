@@ -8,6 +8,7 @@ import GherkinPreview from '../components/GherkinPreview.vue'
 import ExportManager from '../components/ExportManager.vue'
 import GlobalSearch from '../components/search/GlobalSearch.vue'
 import { useGherkinPreview } from '../composables/useGherkinPreview'
+import { api } from '../services/api'
 
 const store = useFeatureStore()
 const activeTab = ref<'overview' | 'scenarios' | 'examples' | 'preview' | 'export'>('overview')
@@ -17,9 +18,13 @@ const darkMode = ref(false)
 const exportedMessage = ref('')
 const showSearchPanel = ref(false)
 const baseline = ref('')
+const featuresRootPath = ref('')
 
 onMounted(() => {
   store.loadFeatures()
+  api.settings().then((settings) => {
+    featuresRootPath.value = settings.featuresPath
+  })
   document.body.classList.toggle('dark-theme', darkMode.value)
 })
 
@@ -75,8 +80,20 @@ function addScenario(type: 'SCENARIO' | 'OUTLINE') {
   })
 }
 
-function handleCreateFeature(name: string) {
-  store.createFeature(name)
+function handleCreateFeature(name: string, folderPath: string) {
+  store.createFeature(name, folderPath)
+}
+
+function handleCreateFolder(parentPath: string, name: string) {
+  store.createFolder(parentPath, name)
+}
+
+function handleRenamePath(path: string, newName: string) {
+  store.renamePath(path, newName)
+}
+
+function handleMovePath(sourcePath: string, destinationFolderPath: string) {
+  store.movePath(sourcePath, destinationFolderPath)
 }
 
 function selectSearchResult(payload: { featureId: string; field: string }) {
@@ -102,14 +119,18 @@ async function saveFeature() {
 <template>
   <div :class="['layout', { dark: darkMode }]">
     <FeatureSidebar
-      :items="store.features"
+      :tree="store.tree"
       :selected-id="store.selectedFeature?.id"
       :loading="store.loading"
       :query="store.query"
       :collapsed="sidebarCollapsed"
+      :root-path="featuresRootPath"
       @select="open"
       @search="(value) => { store.query = value; store.loadFeatures() }"
       @create="handleCreateFeature"
+      @create-folder="handleCreateFolder"
+      @rename-path="handleRenamePath"
+      @move-path="handleMovePath"
       @toggle="sidebarCollapsed = !sidebarCollapsed"
     />
 

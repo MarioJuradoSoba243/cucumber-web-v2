@@ -126,4 +126,28 @@ public class FeatureController {
         log.info("Returning features path settings");
         return Map.of("featuresPath", service.getFeaturesPath());
     }
+
+    @GetMapping("/folders/tree")
+    public FeatureDtos.DirectoryNodeDto tree() throws IOException {
+        log.info("Loading features tree");
+        return service.getDirectoryTree();
+    }
+
+    @PostMapping("/folders")
+    public FeatureDtos.DirectoryNodeDto createFolder(@Valid @RequestBody FeatureDtos.CreateFolderRequestDto request) throws IOException {
+        log.info("Creating folder '{}' in '{}'", request.name(), request.parentPath());
+        return service.createFolder(request);
+    }
+
+    @PutMapping("/paths/rename")
+    public FeatureDtos.DirectoryNodeDto renamePath(@Valid @RequestBody FeatureDtos.RenamePathRequestDto request) throws IOException {
+        log.info("Renaming path '{}' to '{}'", request.path(), request.newName());
+        return service.renamePath(request);
+    }
+
+    @PostMapping("/paths/move")
+    public FeatureDtos.DirectoryNodeDto movePath(@Valid @RequestBody FeatureDtos.MovePathRequestDto request) throws IOException {
+        log.info("Moving '{}' into '{}'", request.sourcePath(), request.destinationFolderPath());
+        return service.movePath(request);
+    }
 }

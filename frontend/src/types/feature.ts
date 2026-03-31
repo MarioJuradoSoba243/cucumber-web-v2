@@ -73,3 +73,11 @@ export type SearchHit = {
 export type SearchResult = { featureId: string; featureName: string; filePath: string; hits: SearchHit[] }
 
 export type SearchPage = { results: SearchResult[]; total: number; page: number; size: number }
+
+export type DirectoryNode = {
+  id: string
+  name: string
+  path: string
+  folders: DirectoryNode[]
+  features: FeatureSummary[]
+}
