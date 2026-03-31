@@ -1,7 +1,6 @@
 package com.cucumberstudio.controller;
 
 import com.cucumberstudio.dto.FeatureDtos;
-import com.cucumberstudio.dto.FeatureStepValidationDtos;
 import com.cucumberstudio.service.FeatureService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -120,15 +119,6 @@ public class FeatureController {
     public Map<String, Long> rescan() throws IOException {
         log.info("Rescanning features directory");
         return Map.of("count", service.rescanCount());
-    }
-
-    @PostMapping("/features/validate")
-    public FeatureStepValidationDtos.StepValidationResponse validateStep(
-            @RequestParam(required = false, defaultValue = "final") String step,
-            @Valid @RequestBody FeatureDtos.FeatureDocumentDto dto
-    ) {
-        var validationStep = FeatureStepValidationDtos.ValidationStep.fromParam(step);
-        return service.validateStep(dto, validationStep);
     }
 
     @GetMapping("/settings/features-path")

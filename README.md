@@ -97,33 +97,12 @@ mvn test
 
 ## Nuevas funcionalidades
 
-### 1) Wizard de edición guiada
-
-- Activa el **Modo wizard** desde la cabecera en `Home`.
-- Pasos: Feature → Scenarios → Examples → Validación/Preview → Exportación.
-- El avance valida el paso actual con `POST /api/features/validate?step=...`.
-- El progreso se guarda localmente por `featureId` en `localStorage` (`wizard:<featureId>`), incluyendo estado de pasos.
-- Puedes guardar borrador en cualquier paso con **Guardar borrador**.
-
-### 2) Búsqueda global
+### 1) Búsqueda global
 
 - Usa la caja **Búsqueda global** o el atajo `Ctrl/Cmd + K`.
 - Busca en nombre/descripción/tags de feature, scenarios, steps y values/columnas de examples.
 - Endpoint: `GET /api/search?q=...&types=feature&tags=smoke&page=0&size=10`.
 - Resultado agrupado por feature con resaltado (`<mark>`) y navegación al editor.
-
-### 3) Plantillas reutilizables
-
-- Biblioteca de plantillas con CRUD y aplicación.
-- Endpoints:
-  - `GET /api/templates`
-  - `POST /api/templates`
-  - `GET /api/templates/{id}`
-  - `PUT /api/templates/{id}`
-  - `DELETE /api/templates/{id}`
-  - `POST /api/templates/{id}/apply`
-- Soporta placeholders (`<campo>`) y preview al aplicar.
-- Errores de negocio: `TEMPLATE_NOT_FOUND`, `INVALID_TEMPLATE_SCOPE`, `MISSING_PLACEHOLDER`.
 
 ## Testing frontend
 

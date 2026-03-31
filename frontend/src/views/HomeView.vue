@@ -6,13 +6,8 @@ import MetricCards from '../components/MetricCards.vue'
 import ScenarioEditor from '../components/ScenarioEditor.vue'
 import GherkinPreview from '../components/GherkinPreview.vue'
 import ExportManager from '../components/ExportManager.vue'
-import FeatureWizard from '../components/wizard/FeatureWizard.vue'
 import GlobalSearch from '../components/search/GlobalSearch.vue'
-import TemplateLibrary from '../components/templates/TemplateLibrary.vue'
-import TemplateEditor from '../components/templates/TemplateEditor.vue'
-import TemplateApplyDialog from '../components/templates/TemplateApplyDialog.vue'
 import { useGherkinPreview } from '../composables/useGherkinPreview'
-import type { TemplateDocument } from '../types/feature'
 
 const store = useFeatureStore()
 const activeTab = ref<'overview' | 'scenarios' | 'examples' | 'preview' | 'export'>('overview')
@@ -20,11 +15,7 @@ const { render } = useGherkinPreview()
 const sidebarCollapsed = ref(false)
 const darkMode = ref(false)
 const exportedMessage = ref('')
-const editingTemplate = ref<TemplateDocument | null>(null)
-const applyingTemplate = ref<TemplateDocument | null>(null)
 const showSearchPanel = ref(false)
-const showTemplatePanel = ref(false)
-const showWizardModal = ref(false)
 const baseline = ref('')
 
 onMounted(() => {
@@ -136,8 +127,6 @@ async function saveFeature() {
           <button class="ghost" @click="darkMode = !darkMode">{{ darkMode ? '☀️ Modo claro' : '🌙 Modo oscuro' }}</button>
           <button class="secondary" :disabled="!store.selectedFeature" @click="activeTab = 'export'">Exportar</button>
           <button class="secondary" @click="showSearchPanel = true">Búsqueda global</button>
-          <button class="secondary" @click="showTemplatePanel = true">Plantillas</button>
-          <button class="secondary" :disabled="!store.selectedFeature" @click="showWizardModal = true">Abrir wizard</button>
           <button class="primary" :disabled="!store.selectedFeature" @click="saveFeature">Guardar</button>
         </div>
       </header>
@@ -211,32 +200,6 @@ async function saveFeature() {
               <button class="ghost" @click="showSearchPanel = false">Cerrar</button>
             </div>
             <GlobalSearch @select="(payload) => { selectSearchResult(payload); showSearchPanel = false }" />
-          </div>
-        </div>
-      </teleport>
-
-      <teleport to="body">
-        <div v-if="showTemplatePanel" class="overlay" @click.self="showTemplatePanel = false">
-          <div class="overlay-panel card">
-            <div class="topbar-actions">
-              <h3>Biblioteca de plantillas</h3>
-              <button class="ghost" @click="showTemplatePanel = false">Cerrar</button>
-            </div>
-            <TemplateLibrary @create="editingTemplate = { name: '', description: '', tags: [], scope: 'SCENARIO', content: '' }" @edit="(tpl) => editingTemplate = tpl" @apply="(tpl) => applyingTemplate = tpl" />
-            <TemplateEditor v-model="editingTemplate" @saved="store.message = 'Plantilla guardada'" />
-            <TemplateApplyDialog :template="applyingTemplate" @close="applyingTemplate = null" @applied="(preview) => { if(store.selectedFeature) { store.selectedFeature.description = `${store.selectedFeature.description}\\n${preview}`; applyingTemplate = null } }" />
-          </div>
-        </div>
-      </teleport>
-
-      <teleport to="body">
-        <div v-if="showWizardModal && store.selectedFeature" class="overlay" @click.self="showWizardModal = false">
-          <div class="overlay-panel card">
-            <div class="topbar-actions">
-              <h3>Wizard de edición</h3>
-              <button class="ghost" @click="showWizardModal = false">Cerrar</button>
-            </div>
-            <FeatureWizard :feature="store.selectedFeature" :exported-message="exportedMessage" @save-draft="saveFeature" />
           </div>
         </div>
       </teleport>

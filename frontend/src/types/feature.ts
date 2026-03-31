@@ -60,16 +60,6 @@ export type ExportSelectionRequest = {
   scenarios: ScenarioExportSelection[]
 }
 
-export type WizardStep = 'feature' | 'scenarios' | 'examples' | 'validation' | 'export'
-
-export type StepStatus = 'pending' | 'in_progress' | 'completed' | 'error'
-
-export type StepValidationResponse = {
-  errors: string[]
-  warnings: string[]
-  blocking: boolean
-}
-
 export type SearchType = 'feature' | 'scenario' | 'outline' | 'example'
 
 export type SearchHit = {
@@ -83,16 +73,3 @@ export type SearchHit = {
 export type SearchResult = { featureId: string; featureName: string; filePath: string; hits: SearchHit[] }
 
 export type SearchPage = { results: SearchResult[]; total: number; page: number; size: number }
-
-export type TemplateScope = 'FEATURE' | 'SCENARIO' | 'OUTLINE'
-
-export type TemplateDocument = {
-  id?: string
-  name: string
-  description?: string
-  tags: string[]
-  scope: TemplateScope
-  content: string
-  createdAt?: string
-  updatedAt?: string
-}

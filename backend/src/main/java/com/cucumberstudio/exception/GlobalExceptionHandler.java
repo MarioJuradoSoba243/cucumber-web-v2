@@ -1,6 +1,5 @@
 package com.cucumberstudio.exception;
 
-import com.cucumberstudio.template.TemplateException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -25,11 +24,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Validation failed"));
-    }
-
-    @ExceptionHandler(TemplateException.class)
-    public ResponseEntity<Map<String, String>> handleTemplate(TemplateException exception) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("code", exception.getCode(), "message", exception.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

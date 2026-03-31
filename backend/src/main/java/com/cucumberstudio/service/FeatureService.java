@@ -8,7 +8,6 @@ import com.cucumberstudio.exporter.GherkinFeatureExporter;
 import com.cucumberstudio.mapper.FeatureMapper;
 import com.cucumberstudio.parser.GherkinFeatureParser;
 import com.cucumberstudio.validation.FeatureValidator;
-import com.cucumberstudio.dto.FeatureStepValidationDtos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -128,33 +127,6 @@ public class FeatureService {
 
     public String getFeaturesPath() {
         return featuresPath().toString();
-    }
-
-    public FeatureStepValidationDtos.StepValidationResponse validateStep(FeatureDtos.FeatureDocumentDto dto, FeatureStepValidationDtos.ValidationStep step) {
-        FeatureDocument document = mapper.toDomain(dto);
-        var fullValidation = validator.validate(document);
-        return switch (step) {
-            case FEATURE -> new FeatureStepValidationDtos.StepValidationResponse(
-                    fullValidation.errors().stream().filter(error -> error.toLowerCase().contains("feature")).toList(),
-                    List.of(),
-                    fullValidation.errors().stream().anyMatch(error -> error.toLowerCase().contains("feature"))
-            );
-            case SCENARIOS -> new FeatureStepValidationDtos.StepValidationResponse(
-                    fullValidation.errors().stream().filter(error -> error.toLowerCase().contains("scenario")).toList(),
-                    fullValidation.warnings(),
-                    fullValidation.errors().stream().anyMatch(error -> error.toLowerCase().contains("scenario"))
-            );
-            case EXAMPLES -> new FeatureStepValidationDtos.StepValidationResponse(
-                    fullValidation.errors().stream().filter(error -> error.toLowerCase().contains("columns") || error.toLowerCase().contains("outline")).toList(),
-                    fullValidation.emptyCells(),
-                    fullValidation.errors().stream().anyMatch(error -> error.toLowerCase().contains("columns") || error.toLowerCase().contains("outline"))
-            );
-            case FINAL -> new FeatureStepValidationDtos.StepValidationResponse(
-                    fullValidation.errors(),
-                    fullValidation.warnings(),
-                    !fullValidation.errors().isEmpty()
-            );
-        };
     }
 
     public long rescanCount() throws IOException {
